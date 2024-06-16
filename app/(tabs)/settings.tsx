@@ -1,4 +1,3 @@
-// DisplayCardsScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { db } from '../../firebaseConfig';

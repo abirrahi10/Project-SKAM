@@ -1,4 +1,3 @@
-// App.js
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { Input, Button } from 'react-native-elements';
