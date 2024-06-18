@@ -1,70 +1,105 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import { Input, Button } from 'react-native-elements';
+import { db } from '../../firebaseConfig';
+import { collection, addDoc } from 'firebase/firestore';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+interface UserData {
+  first: string;
+  middle: string;
+  last: string;
+  born: string;
 }
 
+export default function HomeScreen() {
+  const [loading, setLoading] = useState(false);
+  const [userData, setUserData] = useState({
+    first: '',
+    middle: '',
+    last: '',
+    born: ''
+  });
+
+  const handleChange = (name: keyof UserData, value: string) => {
+    setUserData({
+      ...userData,
+      [name]: value
+    });
+  };
+
+  const addDocument = async () => {
+    setLoading(true);
+    try {
+      const docRef = await addDoc(collection(db, 'users'), {
+        first: userData.first,
+        middle: userData.middle,
+        last: userData.last,
+        born: parseInt(userData.born)
+      });
+
+      setLoading(false);
+      Alert.alert('Success', `Document written with ID: ${docRef.id}`);
+    } catch (error) {
+      setLoading(false);
+      // Assert the type of error as Error
+      if (error instanceof Error) {
+        Alert.alert('Error', `Error adding document: ${error.message}`);
+      } else {
+        Alert.alert('Error', 'An unknown error occurred');
+      }
+    }
+  };
+
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Your Cards</Text>
+      <Input
+        placeholder="First Name"
+        value={userData.first}
+        onChangeText={(value) => handleChange('first', value)}
+      />
+      <Input
+        placeholder="Middle Name"
+        value={userData.middle}
+        onChangeText={(value) => handleChange('middle', value)}
+      />
+      <Input
+        placeholder="Last Name"
+        value={userData.last}
+        onChangeText={(value) => handleChange('last', value)}
+      />
+      <Input
+        placeholder="Year Born"
+        value={userData.born}
+        onChangeText={(value) => handleChange('born', value)}
+        keyboardType="numeric"
+      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <Button title="Add Document" onPress={addDocument} buttonStyle={styles.button} />
+      )}
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  title: {
+    fontSize: 24,
+    textAlign: 'center',
+    marginBottom: 20,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  button: {
+    backgroundColor: '#007bff',
+    marginTop: 20,
   },
 });
+
