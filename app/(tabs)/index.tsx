@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, useColorScheme } from 'react-native';
 import { Input, Button } from 'react-native-elements';
 import { db } from '../../firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
@@ -13,6 +13,7 @@ interface UserData {
 }
 
 export default function HomeScreen() {
+  const colorScheme = useColorScheme();
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState({
     first: '',
@@ -51,10 +52,11 @@ export default function HomeScreen() {
     }
   };
 
+  const isDarkMode = colorScheme === 'dark';
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Firebase Firestore Example</Text>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
+      <Text style={[styles.title, {color: isDarkMode ? '#fff' : '#000' }]}>Firebase Firestore Example</Text>
       <Input
         placeholder="First Name"
         value={userData.first}
@@ -90,7 +92,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 24,
