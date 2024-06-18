@@ -54,7 +54,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Firebase Firestore Example</Text>
+      <Text style={styles.title}>Your Cards</Text>
       <Input
         placeholder="First Name"
         value={userData.first}
