@@ -27,7 +27,7 @@ export default function RootLayout() {
       if (initializing) setInitializing(false);
     });
     return subscriber;
-  }, []);
+  }, [initializing]);
 
   useEffect(() => {
     if (loaded && !initializing) {

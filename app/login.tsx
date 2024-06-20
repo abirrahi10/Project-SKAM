@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, KeyboardA
 import { auth } from '../firebaseConfig';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
+
 export default function LoginScreen({ navigation }: {navigation:any}) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
