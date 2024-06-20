@@ -14,9 +14,9 @@ export default function LoginScreen({ navigation }: {navigation:any}) {
             const response = await signInWithEmailAndPassword(auth, email, password);
             console.log(response);
             navigation.replace("(tabs)");
-        } catch (error) {
+        } catch (error: any) {
             console.log(error);
-            alert("Login failed. Please check your credentials.");
+            alert(error.message);
         } finally {
             setLoading(false);
         }
