@@ -1,50 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { db } from '../../firebaseConfig';
-import { collection, getDocs } from 'firebase/firestore';
+import React from 'react';
+import { View, Text, StyleSheet, useColorScheme, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-interface CardData {
-  first: string;
-  middle: string;
-  last: string;
-  born: number;
+// Button16 
+interface Button16Props {
+  children: React.ReactNode;
+  onClick: () => void;
 }
 
-const DisplayCardsScreen: React.FC = () => {
-  const [cards, setCards] = useState<CardData[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+const Button16: React.FC<Button16Props> = ({ children, onClick }) => (
+  <TouchableOpacity style={styles.button} onPress={onClick}>
+    <Text style={styles.buttonText}>{children}</Text>
+  </TouchableOpacity>
+);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const querySnapshot = await getDocs(collection(db, 'users'));
-        const cardsData: CardData[] = querySnapshot.docs.map((doc) => doc.data() as CardData);
-        setCards(cardsData);
-        setLoading(false);
-      } catch (error) {
-        setLoading(false);
-        console.error("Error fetching cards: ", error);
-      }
-    };
-
-    fetchData();
-  }, []);
+const SettingScreen = () => {
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
+  const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        cards.map((card, index) => (
-          <View key={index} style={styles.card}>
-            <Text>First Name: {card.first}</Text>
-            <Text>Middle Name: {card.middle}</Text>
-            <Text>Last Name: {card.last}</Text>
-            <Text>Born: {card.born}</Text>
-          </View>
-        ))
-      )}
+      <Text style={[styles.heading, {color: isDarkMode ? '#fff' : '#000'}]}>Settings</Text>
+
+      <Button16 onClick={() => navigation.navigate('About')}>
+        About
+      </Button16>
+
+      <Button16 onClick={() => navigation.navigate('Account')}>
+        Account
+      </Button16>
+
+      <Button16 onClick={() => navigation.navigate('Display')}>
+        Display
+      </Button16>
+
     </View>
   );
 };
@@ -52,17 +42,30 @@ const DisplayCardsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#fff',
+    paddingTop: 70,
   },
-  card: {
-    marginBottom: 20,
-    padding: 10,
+  heading: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    paddingBottom: 30,
+  },
+  button: {
+    backgroundColor: '#f8f9fa',
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
+    borderColor: '#f8f9fa',
+    borderRadius: 4,
+    padding: 10,
+    minWidth: 54,
+    alignItems: 'center',
+    marginBottom: 10, // Add space between buttons
+  },
+  buttonText: {
+    color: '#3c4043',
+    fontFamily: 'Arial',
+    fontSize: 14,
   },
 });
 
-export default DisplayCardsScreen;
+export default SettingScreen;
