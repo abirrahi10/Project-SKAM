@@ -18,9 +18,19 @@ const firebaseConfig = {
   measurementId: "G-FHSTJH4CWT"
 };
 
+// COMMENTED OUT AUTH CODE BECAUSE IT GAVE ERRORS AND COULDN'T OPEN APP
+
+// Initialize Firebase
+// const app = initializeApp(firebaseConfig);
+// const analytics = getAnalytics(app);
+// const db = getFirestore(app)
+// const auth = getAuth(app);
+
+// export { db, auth }
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app)
 const auth = getAuth(app)
 
-export { db, auth }
+export { app, db, auth };
