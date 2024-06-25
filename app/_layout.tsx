@@ -8,8 +8,10 @@ import { User, onAuthStateChanged } from 'firebase/auth';
 
 import { auth } from '../firebaseConfig';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import LoginScreen from './(auth)/login';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -36,20 +38,22 @@ export default function RootLayout() {
   }, [loaded, initializing]);
 
   if (!loaded || initializing) {
-    return null;
+    return null
+  }
+
+  if (!user) {
+    return (
+      <Stack>
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+      </Stack>
+    )
   }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        {!user ? (
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-        ) : (
-          <>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </>
-        )}
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" />
       </Stack>
     </ThemeProvider>
   );

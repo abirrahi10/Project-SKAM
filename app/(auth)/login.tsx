@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
-import { auth } from '../firebaseConfig';
+import { auth } from '../../firebaseConfig';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { router } from 'expo-router';
 
-
-export default function LoginScreen({ navigation }: {navigation:any}) {
+export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -14,7 +14,7 @@ export default function LoginScreen({ navigation }: {navigation:any}) {
         try {
             const response = await signInWithEmailAndPassword(auth, email, password);
             console.log(response);
-            navigation.replace("(tabs)");
+            router.replace("(tabs)");
         } catch (error: any) {
             console.log(error);
             alert(error.message);
@@ -29,6 +29,7 @@ export default function LoginScreen({ navigation }: {navigation:any}) {
             const response = await createUserWithEmailAndPassword(auth, email, password);
             console.log(response);
             alert("Account created successfully!");
+            router.replace("(tabs)");
         } catch (error: any) {
             console.log(error);
             alert(error.message);
@@ -36,7 +37,7 @@ export default function LoginScreen({ navigation }: {navigation:any}) {
             setLoading(false);
         }
     };
-
+    
     return (
         <View style={styles.container}>
             <KeyboardAvoidingView behavior='padding'>
