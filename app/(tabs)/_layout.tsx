@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { FontAwesome5 } from '@expo/vector-icons'; // Make sure to import this
 
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
@@ -35,10 +36,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'settings' : 'settings-outline'} color={color} />
-          ),
+          tabBarLabel: 'Settings',
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <FontAwesome5 name="cog" size={size} color={color} />
         }}
       />
     </Tabs>
