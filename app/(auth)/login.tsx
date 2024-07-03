@@ -3,17 +3,32 @@ import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, KeyboardA
 import { auth } from '../../firebaseConfig';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { router } from 'expo-router';
+import { db } from '../../firebaseConfig';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
+    async function setupNewUser(uid: any) {
+        try {
+            // Create empty user document
+            await setDoc(doc(db, 'users', uid), {});
+            
+            // Create empty wallet document
+            await setDoc(doc(db, 'wallets', uid), { cards: [] });
+            
+            console.log('New user documents created successfully');
+        } catch (error) {
+            console.error('Error setting up new user:', error);
+        }
+    }
+
     const signIn = async () => {
         setLoading(true);
         try {
-            const response = await signInWithEmailAndPassword(auth, email, password);
-            console.log(response);
+            await signInWithEmailAndPassword(auth, email, password);
             router.replace("(tabs)");
         } catch (error: any) {
             console.log(error);
@@ -26,8 +41,14 @@ export default function LoginScreen() {
     const signUp = async () => {
         setLoading(true);
         try {
-            const response = await createUserWithEmailAndPassword(auth, email, password);
-            console.log(response);
+            await createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                setupNewUser(user.uid);
+              })
+              .catch((error) => {
+                console.error('Error creating user:', error);
+              });
             alert("Account created successfully!");
             router.replace("(tabs)");
         } catch (error: any) {

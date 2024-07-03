@@ -41,14 +41,6 @@ export default function RootLayout() {
     return null
   }
 
-  if (!user) {
-    return (
-      <Stack>
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-      </Stack>
-    )
-  }
-
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
