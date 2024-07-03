@@ -1,37 +1,38 @@
 import React from 'react';
 import { View, Text, StyleSheet, useColorScheme, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { Link } from 'expo-router';
 
-// Button16 
+// Button16 component
 interface Button16Props {
   children: React.ReactNode;
-  onClick: () => void;
+  href: string;
 }
 
-const Button16: React.FC<Button16Props> = ({ children, onClick }) => (
-  <TouchableOpacity style={styles.button} onPress={onClick}>
-    <Text style={styles.buttonText}>{children}</Text>
-  </TouchableOpacity>
+const Button16: React.FC<Button16Props> = ({ children, href }) => (
+  <Link href={href} asChild>
+    <TouchableOpacity style={styles.button}>
+      <Text style={styles.buttonText}>{children}</Text>
+    </TouchableOpacity>
+  </Link>
 );
 
-const SettingScreen = () => {
+const SettingsScreen = () => {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
-  const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
       <Text style={[styles.heading, {color: isDarkMode ? '#fff' : '#000'}]}>Settings</Text>
 
-      <Button16 onClick={() => navigation.navigate('About')}>
+      <Button16 href="/settings/about">
         About
       </Button16>
 
-      <Button16 onClick={() => navigation.navigate('Account')}>
+      <Button16 href="/settings/account">
         Account
       </Button16>
 
-      <Button16 onClick={() => navigation.navigate('Display')}>
+      <Button16 href="/settings/display">
         Display
       </Button16>
 
@@ -68,4 +69,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SettingScreen;
+export default SettingsScreen;
