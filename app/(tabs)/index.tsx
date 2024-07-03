@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
 });
 */
 
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, useColorScheme, TouchableOpacity, TextInput, Modal, Linking } from 'react-native';
 import { db } from '../../firebaseConfig';

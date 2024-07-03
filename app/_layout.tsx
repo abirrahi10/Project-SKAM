@@ -2,16 +2,12 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
-import { User, onAuthStateChanged } from 'firebase/auth';
 
-import { auth } from '../firebaseConfig';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import LoginScreen from './(auth)/login';
 
-
-
+// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -20,25 +16,14 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  const [user, setUser] = useState<User | null>(null);
-  const [initializing, setInitializing] = useState(true);
-
   useEffect(() => {
-    const subscriber = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      if (initializing) setInitializing(false);
-    });
-    return subscriber;
-  }, [initializing]);
-
-  useEffect(() => {
-    if (loaded && !initializing) {
+    if (loaded) {
       SplashScreen.hideAsync();
     }
-  }, [loaded, initializing]);
+  }, [loaded]);
 
-  if (!loaded || initializing) {
-    return null
+  if (!loaded) {
+    return null;
   }
 
   return (
