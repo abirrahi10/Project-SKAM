@@ -1,119 +1,13 @@
-// OG CODE
-/*
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, useColorScheme } from 'react-native';
-import { Input, Button } from 'react-native-elements';
-import { db } from '../../firebaseConfig';
-import { collection, addDoc } from 'firebase/firestore';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-
-interface UserData {
-  first: string;
-  middle: string;
-  last: string;
-  born: string;
-}
-
-export default function HomeScreen() {
-  const colorScheme = useColorScheme();
-  const [loading, setLoading] = useState(false);
-  const [userData, setUserData] = useState<UserData>({
-    first: '',
-    middle: '',
-    last: '',
-    born: ''
-  });
-
-  const handleChange = (name: keyof UserData, value: string) => {
-    setUserData({
-      ...userData,
-      [name]: value
-    });
-  };
-
-  const addDocument = async () => {
-    setLoading(true);
-    try {
-      const docRef = await addDoc(collection(db, 'users'), {
-        first: userData.first,
-        middle: userData.middle,
-        last: userData.last,
-        born: parseInt(userData.born)
-      });
-
-      setLoading(false);
-      Alert.alert('Success', `Document written with ID: ${docRef.id}`);
-    } catch (error) {
-      setLoading(false);
-      // Assert the type of error as Error
-      if (error instanceof Error) {
-        Alert.alert('Error', `Error adding document: ${error.message}`);
-      } else {
-        Alert.alert('Error', 'An unknown error occurred');
-      }
-    }
-  };
-
-  const isDarkMode = colorScheme === 'dark';
-
-  return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
-      <Text style={[styles.title, {color: isDarkMode ? '#fff' : '#000' }]}>Firebase Firestore Example</Text>
-      <Input
-        placeholder="First Name"
-        value={userData.first}
-        onChangeText={(value) => handleChange('first', value)}
-      />
-      <Input
-        placeholder="Middle Name"
-        value={userData.middle}
-        onChangeText={(value) => handleChange('middle', value)}
-      />
-      <Input
-        placeholder="Last Name"
-        value={userData.last}
-        onChangeText={(value) => handleChange('last', value)}
-      />
-      <Input
-        placeholder="Year Born"
-        value={userData.born}
-        onChangeText={(value) => handleChange('born', value)}
-        keyboardType="numeric"
-      />
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <Button title="Add Document" onPress={addDocument} buttonStyle={styles.button} />
-      )}
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1, 
-    justifyContent: 'center', 
-    padding: 20, 
-  },
-  title: {
-    fontSize: 24,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: '#007bff',
-    marginTop: 20,
-  },
-});
-*/
-
+// New scroll to delete feature was implemented
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, useColorScheme, TouchableOpacity, TextInput, Modal, Linking } from 'react-native';
-import { db } from '../../firebaseConfig';
-import { collection, getDocs, doc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, useColorScheme, TouchableOpacity, TouchableHighlight, TextInput, Modal, Linking, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { db, auth } from '../../firebaseConfig';
+import { collection, getDocs, setDoc, doc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { onAuthStateChanged } from 'firebase/auth';
+import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
 
 interface UserData {
   id: string;
@@ -140,53 +34,58 @@ interface UserData {
   additionalUrls?: string[];
 }
 
-const Card: React.FC<{ card: UserData; onPress: () => void; onDelete: () => void; editMode: boolean }> = ({ card, onPress, onDelete, editMode }) => {
+const Card: React.FC<{ card: UserData; onPress: () => void; onLongPress: () => void; onDelete: () => void }> = ({ card, onPress, onLongPress, onDelete }) => {
   const openUrl = (url?: string) => {
     if (url) {
       Linking.openURL(url);
     }
   };
 
-  return (
-    <TouchableOpacity style={styles.cardWrapper} onPress={onPress}>
-      <LinearGradient
-        colors={['#cdffd8', '#94b9ff']}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-        style={styles.card}
-      >
-        <View style={styles.cardContent}>
-          <View style={styles.cardText}>
-            <Text style={styles.cardType}>{card.type}</Text>
-            <Text style={styles.cardName}>{`${card.firstName} ${card.lastName}`}</Text>
-            {card.phone && <Text style={styles.cardPhone}>{card.phone}</Text>}
-            {card.workNumber && <Text style={styles.cardPhone}>{card.workNumber}</Text>}
-            {card.workEmail && <Text style={styles.cardEmail}>{card.workEmail}</Text>}
-            {card.schoolEmail && <Text style={styles.cardEmail}>{card.schoolEmail}</Text>}
-            {card.personalEmail && <Text style={styles.cardEmail}>{card.personalEmail}</Text>}
-            {card.location && <Text style={styles.cardLocation}>{card.location}</Text>}
-            {card.school && <Text style={styles.cardSchool}>{card.school}</Text>}
-            {card.major && <Text style={styles.cardMajor}>{card.major}</Text>}
-            {card.birthday && <Text style={styles.cardBirthday}>{card.birthday}</Text>}
-            {card.additionalInfo && <Text style={styles.cardAdditionalInfo}>{card.additionalInfo}</Text>}
-            <Text style={styles.cardMore}>TAP TO VIEW MORE</Text>
-          </View>
-          {editMode && (
-            <TouchableOpacity style={styles.deleteButton} onPress={onDelete}>
-              <Icon name="trash" size={24} color="#D72E2E" />
-            </TouchableOpacity>
-          )}
-        </View>
-        <View style={styles.socialIcons}>
-          {card.instagram && <Icon name="instagram" size={24} color="#C13584" onPress={() => openUrl(card.instagram)} />}
-          {card.twitter && <Icon name="twitter" size={24} color="#1DA1F2" onPress={() => openUrl(card.twitter)} />}
-          {card.facebook && <Icon name="facebook" size={24} color="#3b5998" onPress={() => openUrl(card.facebook)} />}
-          {card.linkedin && <Icon name="linkedin" size={24} color="#0077B5" onPress={() => openUrl(card.linkedin)} />}
-          {card.snapchat && <Icon name="snapchat" size={24} color="#FFFC00" onPress={() => openUrl(card.snapchat)} />}
-          {card.discord && <Icon name="discord" size={24} color="#7289DA" onPress={() => openUrl(card.discord)} />}
-        </View>
-      </LinearGradient>
+  const renderRightActions = () => (
+    <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDelete()}>
+      <Icon name="trash" size={24} color="#FFF" />
     </TouchableOpacity>
+  );
+
+  const confirmDelete = () => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this card?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: onDelete }
+      ]
+    );
+  };
+
+  return (
+    <Swipeable renderRightActions={renderRightActions}>
+      <TouchableOpacity style={styles.cardWrapper} onPress={onPress} onLongPress={onLongPress}>
+        <LinearGradient
+          colors={['#cdffd8', '#94b9ff']}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.card}
+        >
+          <View style={styles.cardContent}>
+            <View style={styles.cardText}>
+              <Text style={styles.cardType}>{card.type}</Text>
+              <Text style={styles.cardName}>{`${card.firstName} ${card.lastName}`}</Text>
+              {card.phone && <Text style={styles.cardPhone}>{card.phone}</Text>}
+              {card.personalEmail && <Text style={styles.cardEmail}>{card.personalEmail}</Text>}
+            </View>
+          </View>
+          <View style={styles.socialIcons}>
+            {card.instagram && <Icon name="instagram" size={24} color="#C13584" onPress={() => openUrl(card.instagram)} />}
+            {card.twitter && <Icon name="twitter" size={24} color="#1DA1F2" onPress={() => openUrl(card.twitter)} />}
+            {card.facebook && <Icon name="facebook" size={24} color="#3b5998" onPress={() => openUrl(card.facebook)} />}
+            {card.linkedin && <Icon name="linkedin" size={24} color="#0077B5" onPress={() => openUrl(card.linkedin)} />}
+            {card.snapchat && <Icon name="snapchat" size={24} color="#FFFC00" onPress={() => openUrl(card.snapchat)} />}
+            {card.discord && <Icon name="discord" size={24} color="#7289DA" onPress={() => openUrl(card.discord)} />}
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+    </Swipeable>
   );
 };
 
@@ -200,11 +99,28 @@ export default function HomeScreen() {
   const [isAdding, setIsAdding] = useState(false);
   const [cardTypeModalVisible, setCardTypeModalVisible] = useState(false);
   const [createdCardTypes, setCreatedCardTypes] = useState<Set<string>>(new Set());
+  const [user, setUser] = useState<any>(null); // Updated to store user information
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [showSocialMedia, setShowSocialMedia] = useState(false); // State to control social media visibility
 
   useEffect(() => {
-    const fetchCards = async () => {
+    const fetchUser = () => {
+      onAuthStateChanged(auth, (currentUser) => {
+        if (currentUser) {
+          setUser(currentUser);
+          fetchCards(currentUser.uid); // Fetch cards for the logged-in user
+        } else {
+          setUser(null);
+          setCards([]);
+          setLoading(false);
+        }
+      });
+    };
+
+    const fetchCards = async (userId: string) => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'cards'));
+        const userCardsCollection = collection(db, 'users', userId, 'cards');
+        const querySnapshot = await getDocs(userCardsCollection);
         const cardList: UserData[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
         setCards(cardList);
         setLoading(false);
@@ -215,41 +131,56 @@ export default function HomeScreen() {
       }
     };
 
-    fetchCards();
+    fetchUser();
   }, [modalVisible]);
 
   const handleCardPress = (card: UserData) => {
     if (editMode) {
       setSelectedCard(card);
       setModalVisible(true);
-    } else {
-      Alert.alert('Card Details', `Viewing details for card: ${card.firstName} ${card.lastName}`);
     }
   };
 
+  const handleCardLongPress = (card: UserData) => {
+    setSelectedCard(card);
+    setDetailsModalVisible(true);
+  };
+
   const handleDelete = async (cardId: string) => {
+    if (!user || !cardId) {
+      Alert.alert('Error', 'Invalid card ID or user not authenticated');
+      return;
+    }
+
     console.log('Deleting card with ID:', cardId);
     try {
-      const cardRef = doc(db, `cards/${cardId}`);
+      const cardRef = doc(db, 'cards', cardId);
+      const userCardRef = doc(db, 'users', user.uid, 'cards', cardId);
       await deleteDoc(cardRef);
+      await deleteDoc(userCardRef);
       setCards(cards.filter(card => card.id !== cardId));
+      setCreatedCardTypes(new Set(cards.filter(card => card.id !== cardId).map(card => card.type))); // Update createdCardTypes state
       Alert.alert('Success', 'Card deleted successfully');
     } catch (error) {
+      console.error('Failed to delete card:', error);
       Alert.alert('Error', `Failed to delete card: ${(error as Error).message}`);
     }
   };
 
   const handleSave = async () => {
-    if (selectedCard) {
+    if (selectedCard && user) {
       try {
         if (isAdding) {
-          const docRef = await addDoc(collection(db, 'cards'), selectedCard);
-          selectedCard.id = docRef.id; // Ensure the new card has a valid ID
+          const cardRef = await addDoc(collection(db, 'cards'), selectedCard);
+          selectedCard.id = cardRef.id;
+          const userCardRef = doc(db, 'users', user.uid, 'cards', selectedCard.id);
+          await setDoc(userCardRef, selectedCard);
           Alert.alert('Success', 'Card added successfully');
         } else {
-          console.log('Updating card with ID:', selectedCard.id);
-          const cardRef = doc(db, `cards/${selectedCard.id}`);
+          const cardRef = doc(db, 'cards', selectedCard.id);
+          const userCardRef = doc(db, 'users', user.uid, 'cards', selectedCard.id);
           await updateDoc(cardRef, selectedCard as { [x: string]: any });
+          await updateDoc(userCardRef, selectedCard as { [x: string]: any });
           Alert.alert('Success', 'Card updated successfully');
         }
         setModalVisible(false);
@@ -263,13 +194,21 @@ export default function HomeScreen() {
     }
   };
 
-  const handleChange = (name: keyof UserData, value: string) => {
+  const handleChange = (name: keyof UserData, value: string | string[]) => {
     if (selectedCard) {
-      setSelectedCard({ ...selectedCard, [name]: value });
+      if (name === 'additionalUrls' && Array.isArray(value)) {
+        setSelectedCard({ ...selectedCard, [name]: value });
+      } else {
+        setSelectedCard({ ...selectedCard, [name]: value });
+      }
     }
   };
 
   const handleAddPress = () => {
+    if (cards.length >= 3) {
+      Alert.alert('Limit reached', 'You can only create up to 3 cards.');
+      return;
+    }
     setCardTypeModalVisible(true);
   };
 
@@ -325,7 +264,7 @@ export default function HomeScreen() {
               style={styles.input}
               placeholder="Additional URLs (comma-separated)"
               value={selectedCard.additionalUrls?.join(', ')}
-              onChangeText={(value) => handleChange('additionalUrls', value.split(', ').join(', '))}
+              onChangeText={(value) => handleChange('additionalUrls', value.split(', '))}
             />
           </>
         )}
@@ -407,36 +346,43 @@ export default function HomeScreen() {
               value={selectedCard.location}
               onChangeText={(value) => handleChange('location', value)}
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Instagram"
-              value={selectedCard.instagram}
-              onChangeText={(value) => handleChange('instagram', value)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Twitter"
-              value={selectedCard.twitter}
-              onChangeText={(value) => handleChange('twitter', value)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Facebook"
-              value={selectedCard.facebook}
-              onChangeText={(value) => handleChange('facebook', value)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="TikTok"
-              value={selectedCard.tiktok}
-              onChangeText={(value) => handleChange('tiktok', value)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Snapchat"
-              value={selectedCard.snapchat}
-              onChangeText={(value) => handleChange('snapchat', value)}
-            />
+            <TouchableOpacity onPress={() => setShowSocialMedia(!showSocialMedia)}>
+              <Text style={styles.socialMediaToggle}>{showSocialMedia ? 'Hide Social Media' : 'Show Social Media'}</Text>
+            </TouchableOpacity>
+            {showSocialMedia && (
+              <>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Instagram"
+                  value={selectedCard.instagram}
+                  onChangeText={(value) => handleChange('instagram', value)}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Twitter"
+                  value={selectedCard.twitter}
+                  onChangeText={(value) => handleChange('twitter', value)}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Facebook"
+                  value={selectedCard.facebook}
+                  onChangeText={(value) => handleChange('facebook', value)}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="TikTok"
+                  value={selectedCard.tiktok}
+                  onChangeText={(value) => handleChange('tiktok', value)}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Snapchat"
+                  value={selectedCard.snapchat}
+                  onChangeText={(value) => handleChange('snapchat', value)}
+                />
+              </>
+            )}
             <TextInput
               style={styles.input}
               placeholder="Birthday"
@@ -458,126 +404,180 @@ export default function HomeScreen() {
   const isDarkMode = colorScheme === 'dark';
 
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
-      <TouchableOpacity style={styles.addButton} onPress={handleAddPress}>
-        <Text style={styles.addButtonText}>+</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.editButton} onPress={() => setEditMode(!editMode)}>
-        <Text style={styles.editButtonText}>{editMode ? 'Done' : 'Edit'}</Text>
-      </TouchableOpacity>
-      <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>YOUR CARDS</Text>
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        cards.map(card => (
-          <Card
-            key={card.id}
-            card={card}
-            onPress={() => handleCardPress(card)}
-            onDelete={() => handleDelete(card.id)}
-            editMode={editMode}
-          />
-        ))
-      )}
-
-      <Modal
-        animationType="slide"
-        transparent={false}
-        visible={cardTypeModalVisible}
-        onRequestClose={() => setCardTypeModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Select Card Type</Text>
-          {['Student', 'Work', 'Personal'].map(type => (
-            <TouchableOpacity
-              key={type}
-              style={[
-                styles.cardTypeButton,
-                createdCardTypes.has(type) && styles.disabledButton
-              ]}
-              onPress={() => !createdCardTypes.has(type) && handleCardTypeSelect(type)}
-              disabled={createdCardTypes.has(type)}>
-              <Text style={styles.cardTypeButtonText}>{type}</Text>
-            </TouchableOpacity>
-          ))}
-          <TouchableOpacity style={styles.cancelButton} onPress={() => setCardTypeModalVisible(false)}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
-
-      <Modal
-        animationType="slide"
-        transparent={false}
-        visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(!modalVisible);
-          setIsAdding(false);
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
+        <TouchableOpacity style={styles.addButton} onPress={handleAddPress}>
+          <Text style={styles.addButtonText}>+</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.editButton} onPress={() => {
+          setEditMode(!editMode);
+          if (!editMode) {
+            Alert.alert('Edit Mode', 'Select a card to edit');
+          }
         }}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>{isAdding ? 'Add Details' : 'Edit Card'}</Text>
-          {selectedCard && (
-            <>
-              {renderFormFields()}
-              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                <Text style={styles.saveButtonText}>Save</Text>
+          <Text style={styles.editButtonText}>{editMode ? 'Done' : 'Edit'}</Text>
+        </TouchableOpacity>
+        <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>YOUR CARDS</Text>
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          <ScrollView>
+            {cards.map(card => (
+              <Card
+                key={card.id}
+                card={card}
+                onPress={() => handleCardPress(card)}
+                onLongPress={() => handleCardLongPress(card)}
+                onDelete={() => handleDelete(card.id)}
+              />
+            ))}
+          </ScrollView>
+        )}
+
+        <Modal
+          animationType="slide"
+          transparent={false}
+          visible={cardTypeModalVisible}
+          onRequestClose={() => setCardTypeModalVisible(false)}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Select Card Type</Text>
+            {['Student', 'Work', 'Personal'].map(type => (
+              <TouchableOpacity
+                key={type}
+                style={[
+                  styles.cardTypeButton,
+                  createdCardTypes.has(type) && styles.disabledButton
+                ]}
+                onPress={() => !createdCardTypes.has(type) && handleCardTypeSelect(type)}
+                disabled={createdCardTypes.has(type)}>
+                <Text style={styles.cardTypeButtonText}>{type}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+            ))}
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setCardTypeModalVisible(false)}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+
+        <Modal
+          animationType="slide"
+          transparent={false}
+          visible={modalVisible}
+          onRequestClose={() => {
+            setModalVisible(!modalVisible);
+            setIsAdding(false);
+          }}>
+          <View style={styles.container}>
+            <Text style={[styles.modalTitle, { color: isDarkMode ? '#fff' : '#000' }]}>{isAdding ? 'Add Details' : 'Edit Details'}</Text>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={{ flex: 1 }}>
+              <ScrollView contentContainerStyle={styles.modalContent}>
+                {selectedCard && (
+                  <>
+                    {renderFormFields()}
+                    <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                      <Text style={styles.saveButtonText}>Save</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </ScrollView>
+            </KeyboardAvoidingView>
+          </View>
+        </Modal>
+
+        <Modal
+          animationType="slide"
+          transparent={false}
+          visible={detailsModalVisible}
+          onRequestClose={() => setDetailsModalVisible(false)}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Card Details</Text>
+            <ScrollView>
+              {selectedCard && (
+                <View>
+                  <Text style={styles.detailText}>Type: {selectedCard.type}</Text>
+                  <Text style={styles.detailText}>Name: {selectedCard.firstName} {selectedCard.lastName}</Text>
+                  <Text style={styles.detailText}>Phone: {selectedCard.phone}</Text>
+                  <Text style={styles.detailText}>Work Number: {selectedCard.workNumber}</Text>
+                  <Text style={styles.detailText}>Work Email: {selectedCard.workEmail}</Text>
+                  <Text style={styles.detailText}>School Email: {selectedCard.schoolEmail}</Text>
+                  <Text style={styles.detailText}>Personal Email: {selectedCard.personalEmail}</Text>
+                  <Text style={styles.detailText}>Location: {selectedCard.location}</Text>
+                  <Text style={styles.detailText}>School: {selectedCard.school}</Text>
+                  <Text style={styles.detailText}>Major: {selectedCard.major}</Text>
+                  <Text style={styles.detailText}>Discord: {selectedCard.discord}</Text>
+                  <Text style={styles.detailText}>Additional Info: {selectedCard.additionalInfo}</Text>
+                  <Text style={styles.detailText}>Instagram: {selectedCard.instagram}</Text>
+                  <Text style={styles.detailText}>Twitter: {selectedCard.twitter}</Text>
+                  <Text style={styles.detailText}>Facebook: {selectedCard.facebook}</Text>
+                  <Text style={styles.detailText}>TikTok: {selectedCard.tiktok}</Text>
+                  <Text style={styles.detailText}>Snapchat: {selectedCard.snapchat}</Text>
+                  <Text style={styles.detailText}>Birthday: {selectedCard.birthday}</Text>
+                  <Text style={styles.detailText}>Additional URLs: {selectedCard.additionalUrls?.join(', ')}</Text>
+                </View>
+              )}
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setDetailsModalVisible(false)}>
+                <Text style={styles.cancelButtonText}>Close</Text>
               </TouchableOpacity>
-            </>
-          )}
-        </View>
-      </Modal>
-    </View>
+            </ScrollView>
+          </View>
+        </Modal>
+      </View>
+    </GestureHandlerRootView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1, 
     justifyContent: 'flex-start', 
-    padding: 70, 
+    padding: 20, // Adjust padding to change white border size
     position: 'relative', 
   },
   title: {
     fontWeight: 'bold',
     fontSize: 24,
     textAlign: 'center',
-    marginBottom: 50,
+    marginTop: 40,
+    marginBottom: 30,
   },
   addButton: {
-    position: 'absolute', 
-    top: 60,
-    left: 20,
-    padding: 10,
+    position: 'absolute',
+    top: 24.5,
+    left: 12,
+    padding: 30,
   },
   addButtonText: {
     color: '#007bff',
     fontWeight: 'bold',
-    fontSize: 24,
+    fontSize: 28,
   },
   editButton: {
     position: 'absolute', 
-    top: 64,
-    right: 18,
-    padding: 10,
+    top: 32.5,
+    right: 25,
+    paddingTop: 30,
   },
   editButtonText: {
     color: '#007bff',
     fontWeight: 'bold',
-    fontSize: 18,
+    fontSize: 20,
   },
-  cardWrapper: {
-    marginBottom: 30,
+  cardWrapper: { // Around the card itself
+    marginBottom: 30, // Space between each card
     borderRadius: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 10,
+    elevation: 10, 
   },
-  card: {
-    borderRadius: 8,
+  card: { // Inside the card itself
+    borderRadius: 10,
     padding: 20,
+    // Adjust height to change card height
+    height: 200, // Modify this value to change card height
+    width: '100%',
   },
   cardContent: {
     flexDirection: 'row',
@@ -605,45 +605,26 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 15,
   },
-  cardLocation: {
-    marginTop: 5,
-    fontSize: 15,
-  },
-  cardSchool: {
-    marginTop: 5,
-    fontSize: 15,
-  },
-  cardMajor: {
-    marginTop: 5,
-    fontSize: 15,
-  },
-  cardBirthday: {
-    marginTop: 5,
-    fontSize: 15,
-  },
-  cardAdditionalInfo: {
-    marginTop: 5,
-    fontSize: 15,
-  },
-  cardMore: {
-    marginTop: 20,
-    // marginBottom: -10,
-    fontSize: 10,
-    color: '#007bff',
-    textAlign: 'left',
-  },
   deleteButton: {
-    marginLeft: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#D72E2E',
+    borderRadius: 10,
+    marginRight: 10,
+    // Modify width and height to change the size of the delete button
+    width: 80, // Adjust width
+    height: 200, // Adjust height
   },
-  modalContainer: { 
+  modalContainer: { // Buttons in "Select Card Type" when creating a new card
     flex: 1,
     justifyContent: 'center',
     padding: 20,
   },
-  modalTitle: {
+  modalTitle: { // "Select Card Type" Font when creating a new card
     fontSize: 24,
     textAlign: 'center',
     marginBottom: 20,
+    marginTop: 50, // Adjust this to change the vertical position
   },
   cardTypeButton: {
     padding: 15,
@@ -670,11 +651,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  input: { // border around name, phone, email etc.
-    borderWidth: 2, // border thickness
+  input: {
+    borderWidth: 2,
     borderColor: '#ccc',
     padding: 15,
-    marginBottom: 10, // space between one another
+    marginBottom: 10,
     borderRadius: 8,
   },
   saveButton: {
@@ -691,5 +672,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginTop: 10,
+  },
+  modalContent: {
+    paddingBottom: 70, // Adjust bottom padding for scrolling space in modal
+  },
+  detailText: { // Card Details when you hold onto the card
+    fontSize: 16,
+    marginBottom: 14, // Distance of each detail from each other
+  },
+  socialMediaToggle: {
+    color: '#007bff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginVertical: 10,
   },
 });
