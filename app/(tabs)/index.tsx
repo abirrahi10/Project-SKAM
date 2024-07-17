@@ -1,7 +1,7 @@
-// New scroll to delete feature was implemented
+// Implemented some small changes and styling
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, useColorScheme, TouchableOpacity, TouchableHighlight, TextInput, Modal, Linking, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, useColorScheme, TouchableOpacity, TouchableHighlight, TextInput, Modal, Linking, ScrollView, KeyboardAvoidingView, Platform, Switch, Animated } from 'react-native';
 import { db, auth } from '../../firebaseConfig';
 import { collection, getDocs, setDoc, doc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -34,18 +34,30 @@ interface UserData {
   additionalUrls?: string[];
 }
 
-const Card: React.FC<{ card: UserData; onPress: () => void; onLongPress: () => void; onDelete: () => void }> = ({ card, onPress, onLongPress, onDelete }) => {
+const Card: React.FC<{ card: UserData; onPress: () => void; onLongPress: () => void; onDelete: () => void; editMode: boolean }> = ({ card, onPress, onLongPress, onDelete, editMode }) => {
   const openUrl = (url?: string) => {
     if (url) {
       Linking.openURL(url);
     }
   };
 
-  const renderRightActions = () => (
-    <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDelete()}>
-      <Icon name="trash" size={24} color="#FFF" />
-    </TouchableOpacity>
-  );
+  const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>) => {
+    const trans = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [1, 0],
+      extrapolate: 'clamp',
+    });
+    return (
+      <TouchableOpacity 
+        style={styles.deleteButton} 
+        onPress={() => confirmDelete()}
+      >
+        <Animated.View style={[styles.deleteButtonContent, { transform: [{ translateX: trans }] }]}>
+          <Icon name="trash" size={24} color="#FFF" />
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
 
   const confirmDelete = () => {
     Alert.alert(
@@ -60,7 +72,11 @@ const Card: React.FC<{ card: UserData; onPress: () => void; onLongPress: () => v
 
   return (
     <Swipeable renderRightActions={renderRightActions}>
-      <TouchableOpacity style={styles.cardWrapper} onPress={onPress} onLongPress={onLongPress}>
+      <TouchableOpacity 
+        style={styles.cardWrapper} 
+        onPress={editMode ? onPress : undefined} 
+        onLongPress={onLongPress}
+      >
         <LinearGradient
           colors={['#cdffd8', '#94b9ff']}
           start={{ x: 0, y: 0.5 }}
@@ -346,9 +362,16 @@ export default function HomeScreen() {
               value={selectedCard.location}
               onChangeText={(value) => handleChange('location', value)}
             />
-            <TouchableOpacity onPress={() => setShowSocialMedia(!showSocialMedia)}>
-              <Text style={styles.socialMediaToggle}>{showSocialMedia ? 'Hide Social Media' : 'Show Social Media'}</Text>
-            </TouchableOpacity>
+            <View style={styles.socialMediaToggle}>
+            <Text>Show Social Media</Text>
+            <Switch
+              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              thumbColor={showSocialMedia ? "#f5dd4b" : "#f4f3f4"}
+              ios_backgroundColor="#3e3e3e"
+              onValueChange={() => setShowSocialMedia(!showSocialMedia)}
+              value={showSocialMedia}
+            />
+          </View>
             {showSocialMedia && (
               <>
                 <TextInput
@@ -396,7 +419,7 @@ export default function HomeScreen() {
               onChangeText={(value) => handleChange('additionalInfo', value)}
             />
           </>
-        )}
+         )}
       </>
     );
   };
@@ -406,31 +429,42 @@ export default function HomeScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
-        <TouchableOpacity style={styles.addButton} onPress={handleAddPress}>
-          <Text style={styles.addButtonText}>+</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.editButton} onPress={() => {
-          setEditMode(!editMode);
+        {!editMode && (
+          <TouchableOpacity style={styles.addButton} onPress={handleAddPress}>
+            <Text style={styles.addButtonText}>+</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity 
+          style={styles.editButton} 
+          onPress={() => {
+            setEditMode(!editMode);
           if (!editMode) {
-            Alert.alert('Edit Mode', 'Select a card to edit');
+            Alert.alert('Edit Mode', 'You are now in Edit Mode.');
           }
-        }}>
-          <Text style={styles.editButtonText}>{editMode ? 'Done' : 'Edit'}</Text>
+        }}
+      >
+        {editMode ? (
+    <Text style={styles.doneButtonText}>Done</Text>
+  ) : (
+    <Icon name="edit" size={24} color="#007bff" />
+    )}
         </TouchableOpacity>
         <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>YOUR CARDS</Text>
+        {editMode && <Text style={styles.editModeText}>Select a card to edit, hit Done when finished.</Text>}
         {loading ? (
           <ActivityIndicator size="large" color="#0000ff" />
         ) : (
           <ScrollView>
             {cards.map(card => (
               <Card
-                key={card.id}
-                card={card}
-                onPress={() => handleCardPress(card)}
-                onLongPress={() => handleCardLongPress(card)}
-                onDelete={() => handleDelete(card.id)}
-              />
-            ))}
+              key={card.id}
+              card={card}
+              onPress={() => handleCardPress(card)}
+              onLongPress={() => handleCardLongPress(card)}
+              onDelete={() => handleDelete(card.id)}
+              editMode={editMode}
+            />
+          ))}
           </ScrollView>
         )}
 
@@ -442,7 +476,7 @@ export default function HomeScreen() {
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Select Card Type</Text>
             {['Student', 'Work', 'Personal'].map(type => (
-              <TouchableOpacity
+              <TouchableHighlight
                 key={type}
                 style={[
                   styles.cardTypeButton,
@@ -451,7 +485,7 @@ export default function HomeScreen() {
                 onPress={() => !createdCardTypes.has(type) && handleCardTypeSelect(type)}
                 disabled={createdCardTypes.has(type)}>
                 <Text style={styles.cardTypeButtonText}>{type}</Text>
-              </TouchableOpacity>
+              </TouchableHighlight>
             ))}
             <TouchableOpacity style={styles.cancelButton} onPress={() => setCardTypeModalVisible(false)}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -542,30 +576,37 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 24,
     textAlign: 'center',
-    marginTop: 40,
-    marginBottom: 30,
+    marginTop: 50,
+    marginBottom: 35,
   },
   addButton: {
     position: 'absolute',
-    top: 24.5,
-    left: 12,
-    padding: 30,
+    top: 56,
+    left: 24,
+    padding: 10, 
+    zIndex: 1, // Adjust z-index to change button layering
   },
   addButtonText: {
     color: '#007bff',
     fontWeight: 'bold',
-    fontSize: 28,
+    fontSize: 26,
   },
   editButton: {
     position: 'absolute', 
-    top: 32.5,
-    right: 25,
-    paddingTop: 30,
+    top: 62,
+    right: 16,
+    padding: 10,
+    zIndex: 1, // Adjust z-index to change button layering
   },
   editButtonText: {
     color: '#007bff',
     fontWeight: 'bold',
     fontSize: 20,
+  },
+  doneButtonText: {
+    color: '#007bff',
+    fontWeight: 'bold',
+    fontSize: 18,
   },
   cardWrapper: { // Around the card itself
     marginBottom: 30, // Space between each card
@@ -606,14 +647,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   deleteButton: {
+    backgroundColor: '#D72E2E',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#D72E2E',
-    borderRadius: 10,
-    marginRight: 10,
-    // Modify width and height to change the size of the delete button
-    width: 80, // Adjust width
-    height: 200, // Adjust height
+    width: 80,
+    height: '87%',
+    borderRadius: 8,
+  },
+  deleteButtonContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  deleteButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    marginLeft: 10,
   },
   modalContainer: { // Buttons in "Select Card Type" when creating a new card
     flex: 1,
@@ -681,9 +731,17 @@ const styles = StyleSheet.create({
     marginBottom: 14, // Distance of each detail from each other
   },
   socialMediaToggle: {
-    color: '#007bff',
-    fontWeight: 'bold',
-    fontSize: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginVertical: 10,
+  },
+  editModeText: {
+    color: '#8B918D',
+    textAlign: 'center',
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginTop: -20,
+    marginBottom: 10,
   },
 });
