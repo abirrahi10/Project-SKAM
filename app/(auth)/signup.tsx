@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#ffffff',
     },
     darkContainer: {
-        backgroundColor: '#1a1a1a',
+        backgroundColor: '#000000',
     },
     title: {
         fontSize: 24,
