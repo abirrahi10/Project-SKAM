@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, useColorScheme, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, useColorScheme, TouchableOpacity, Alert } from 'react-native';
 import { Link } from 'expo-router';
 import { getAuth, onAuthStateChanged, User, signOut } from 'firebase/auth';
 
@@ -30,7 +30,6 @@ const LoginButton: React.FC<LoginButtonProps> = ({ children, href }) => (
 );
 
 
-
 interface LogoutButtonProps {
   children: React.ReactNode;
 }
@@ -41,38 +40,46 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({ children }) => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      console.log('User signed out successfully');
+      Alert.alert('Logged out', 'You have been successfully logged out.');
     } catch (error) {
-      console.error('Error signing out:', error);
+      Alert.alert('Error', 'There was a problem logging out. Please try again.');
     }
   };
 
+  const askLogOut = () => {
+    Alert.alert(
+      'Are you sure you want to log out',
+      '',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+          onPress: () => handleLogout(), // Call handleLogout function here
+        },
+      ]
+    );
+  };
+
   return (
-    <TouchableOpacity 
-      style={styles.loginButton} 
-      onPress={handleLogout}
-    >
+    <TouchableOpacity style={styles.loginButton} onPress={askLogOut}>
       <Text style={styles.loginButtonText}>{children}</Text>
     </TouchableOpacity>
   );
 };
 
 
+
 const checkUserLoginStatus = (callback: (user: User | null) => void): void => {
   const auth = getAuth();
   
   onAuthStateChanged(auth, (user: User | null) => {
-    if (user) {
-      console.log(`User is signed in with UID: ${user.uid}`);
-    } else {
-      console.log("No user is signed in.");
-    }
     callback(user);
   });
 };
-
-
-
 
 
 const SettingsScreen = () => {
@@ -90,10 +97,9 @@ const SettingsScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={[styles.heading, {color: isDarkMode ? '#fff' : '#000'}]}>Settings</Text>
-
       
         {user ? (
-          <LogoutButton>
+          <LogoutButton >
             Log out
           </LogoutButton>
         ) : (
@@ -101,15 +107,6 @@ const SettingsScreen = () => {
             Log in
           </LoginButton>
         )}
-
-
-
-
-
-
-        {/* <LoginButton href="/login">
-          Log in
-        </LoginButton> */}
 
       </View>
 
