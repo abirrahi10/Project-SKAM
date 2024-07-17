@@ -1,29 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
-import { auth } from '../../firebaseConfig';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { router } from 'expo-router';
-import { db } from '../../firebaseConfig';
-import { doc, setDoc } from 'firebase/firestore';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, useColorScheme } from 'react-native';
+import { Link, router } from 'expo-router';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from "../../firebaseConfig";
 
 export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const colorScheme = useColorScheme();
 
-    async function setupNewUser(uid: any) {
-        try {
-            // Create empty user document
-            await setDoc(doc(db, 'users', uid), {});
-            
-            // Create empty wallet document
-            await setDoc(doc(db, 'wallets', uid), { cards: [] });
-            
-            console.log('New user documents created successfully');
-        } catch (error) {
-            console.error('Error setting up new user:', error);
-        }
-    }
+    const isDarkMode = colorScheme === 'dark';
 
     const signIn = async () => {
         setLoading(true);
@@ -38,54 +25,45 @@ export default function LoginScreen() {
         }
     };
 
-    const signUp = async () => {
-        setLoading(true);
-        try {
-            await createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                setupNewUser(user.uid);
-              })
-              .catch((error) => {
-                console.error('Error creating user:', error);
-              });
-            alert("Account created successfully!");
-            router.replace("(tabs)");
-        } catch (error: any) {
-            console.log(error);
-            alert(error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-    
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, isDarkMode && styles.darkContainer]}>
             <KeyboardAvoidingView behavior='padding'>
-                <Text style={styles.title}>Login</Text>
+                <Text style={[styles.title, isDarkMode && styles.darkText]}>Login</Text>
                 <TextInput
-                    value={email}
-                    style={styles.input}
-                    placeholder="Email"
-                    onChangeText={(text) => setEmail(text)}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
+                value={email}
+                style={[styles.input, isDarkMode && styles.darkInput]}
+                placeholder="Email"
+                placeholderTextColor={isDarkMode ? "#999" : "#666"}
+                onChangeText={(text) => setEmail(text)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="emailAddress"
+                returnKeyType="next"
+                blurOnSubmit={false}
                 />
                 <TextInput
-                    value={password}
-                    style={styles.input}
-                    placeholder="Password"
-                    onChangeText={(text) => setPassword(text)}
-                    secureTextEntry={true}
-                />
+                value={password}
+                style={[styles.input, isDarkMode && styles.darkInput]}
+                placeholder="Password"
+                placeholderTextColor={isDarkMode ? "#999" : "#666"}
+                onChangeText={(text) => setPassword(text)}
+                secureTextEntry={true}
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="password"
+                returnKeyType="done"
+            />
                 {loading ? (
-                    <ActivityIndicator size="large" color="#0000ff" />
+                    <ActivityIndicator size="large" color={isDarkMode ? "#ffffff" : "#000000"} />
                 ) : (
-                    <>
-                        <Button title="Sign In" onPress={signIn} />
-                        <Button title="Create Account" onPress={signUp} />
-                    </>
+                    <TouchableOpacity style={styles.button} onPress={signIn}>
+                        <Text style={styles.buttonText}>Sign In</Text>
+                    </TouchableOpacity>
                 )}
+                <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/signup')}>
+                    <Text style={[styles.linkText, isDarkMode && styles.darkLinkText]}>Don't have an account? Sign up</Text>
+                </TouchableOpacity> 
             </KeyboardAvoidingView>
         </View>
     );
@@ -96,11 +74,19 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         padding: 16,
+        backgroundColor: '#ffffff',
+    },
+    darkContainer: {
+        backgroundColor: '#000000',
     },
     title: {
         fontSize: 24,
         marginBottom: 16,
         textAlign: 'center',
+        color: '#000000',
+    },
+    darkText: {
+        color: '#ffffff',
     },
     input: {
         height: 40,
@@ -108,5 +94,34 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         marginBottom: 12,
         paddingHorizontal: 8,
+        color: '#000000',
+        backgroundColor: '#ffffff',
+    },
+    darkInput: {
+        color: '#ffffff',
+        backgroundColor: '#333333',
+        borderColor: '#666666',
+    },
+    button: {
+        backgroundColor: '#007AFF',
+        padding: 12,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    buttonText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    linkButton: {
+        alignItems: 'center',
+    },
+    linkText: {
+        color: '#007AFF',
+        fontSize: 14,
+    },
+    darkLinkText: {
+        color: '#4da6ff',
     },
 });
