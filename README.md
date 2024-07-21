@@ -1,16 +1,26 @@
-# Welcome to your Expo app 👋
+# Welcome to SKAM 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Get started
+## What is SKAM?
 
-1. Install dependencies
+SKAM is an application (currently only in iOS) that makes connecting the world with a single tap easier! If you've ever gotten tired of sending your friend your Instagram name, your Facebook name, their phone number, and more, SKAM helps you save time from that hassle. Users on the application will be allowed to create up to three cards: personal, work, and student cards for all aspects of their lives. Each card contains different information so you're not oversharing based on your environment! With a single search or tap of the virtual card, you can share whichever card you want with anyone who uses SKAM!
+
+1. Clone application
 
    ```bash
-   npm install
+   git clone "ssh or https"
+   ```
+   
+2. Request firebaseConfig.js file from owner
+
+3. Install dependencies
+
+   ```bash
+    npm install
    ```
 
-2. Start the app
+4. Start app
 
    ```bash
     npx expo start
@@ -22,29 +32,3 @@ In the output, you'll find options to open the app in a
 - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
