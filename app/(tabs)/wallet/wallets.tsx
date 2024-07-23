@@ -1,8 +1,8 @@
 // DisplayCardsScreen.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, useColorScheme, TextInput, TouchableOpacity, FlatList } from 'react-native';
 import { db, auth } from '../../../firebaseConfig';
-import { collection, onSnapshot, doc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, query, orderBy } from 'firebase/firestore';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -47,54 +47,58 @@ const DisplayCardsScreen: React.FC = () => {
 
   const isDarkMode = colorScheme === 'dark';
 
-  useEffect(() => {
+  const fetchCards = useCallback(() => {
     const user = auth.currentUser;
     if (!user) {
       console.error("No user logged in");
+      setLoading(false);
       return;
     }
 
     const userWalletRef = doc(db, 'wallets', user.uid);
     const cardsRef = collection(userWalletRef, 'cards');
+    const q = query(cardsRef, orderBy(sortBy));
 
-    const unsubscribe = onSnapshot(cardsRef, (querySnapshot) => {
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const cardsData: CardData[] = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
         ...doc.data(),
-        id: doc.id
       } as CardData));
+      console.log("Fetched cards:", cardsData);
       setCards(cardsData);
-      setFilteredCards(cardsData);
+      
       setLoading(false);
     }, (error) => {
       console.error("Error fetching cards: ", error);
       setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, []);
+    return unsubscribe;
+  }, [sortBy]);
+
+  useEffect(() => {
+    const unsubscribe = fetchCards();
+    return () => {
+      if(unsubscribe){
+      unsubscribe();
+    }
+  };
+
+  }, [fetchCards]);
 
   useEffect(() => {
     let filtered = cards.filter(card => 
-      card.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      card.lastName.toLowerCase().includes(searchQuery.toLowerCase())
+      card.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      card.lastName?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     // Apply filter
     if (filterBy !== 'A') {
-      filtered = filtered.filter(card => card.type[0].toUpperCase() === filterBy);
+      filtered = filtered.filter(card => card.type?.[0].toUpperCase() === filterBy);
     }
 
-    // Apply sort
-    filtered.sort((a, b) => {
-      if (sortBy === 'firstName') {
-        return a.firstName.localeCompare(b.firstName);
-      } else {
-        return a.lastName.localeCompare(b.lastName);
-      }
-    });
-
     setFilteredCards(filtered);
-  }, [searchQuery, cards, sortBy, filterBy]);
+  }, [searchQuery, cards, filterBy]);
 
   const renderCard = ({ item }: { item: CardData }) => (
     <LinearGradient
@@ -134,7 +138,7 @@ const DisplayCardsScreen: React.FC = () => {
         </View>
         <TouchableOpacity 
           style={styles.addButton}
-          onPress={() => navigation.navigate('addCardWallet' as never)}
+          onPress={() => navigation.navigate('AddCard' as never)}
         >
           <Ionicons name="add" size={24} color="white" />
         </TouchableOpacity>
@@ -177,13 +181,17 @@ const DisplayCardsScreen: React.FC = () => {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="small" color={isDarkMode ? "#ffffff" : "#0000ff"} />
-      ) : (
+        <ActivityIndicator size="large" color={isDarkMode ? "#ffffff" : "#0000ff"} />
+      ) : filteredCards.length > 0 ? (
         <FlatList
           data={filteredCards}
           renderItem={renderCard}
           keyExtractor={(item) => item.id}
         />
+      ) : (
+        <Text style={[styles.noCardText, isDarkMode && styles.darkText]}>
+        No cards found.
+        </Text>
       )}
     </View>
   );
@@ -282,6 +290,11 @@ const styles = StyleSheet.create({
   cardText: {
     fontSize: 16,
     color: '#000000',
+  },
+  noCardText: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 
