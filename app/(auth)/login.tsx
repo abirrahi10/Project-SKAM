@@ -3,6 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
 import { Link, router } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from "../../firebaseConfig";
+import { useDarkMode } from '../DarkModeContext';
+import { StatusBar } from 'expo-status-bar';
+
 
 export default function LoginScreen() {
     const [email, setEmail] = useState('');
@@ -10,7 +13,8 @@ export default function LoginScreen() {
     const [loading, setLoading] = useState(false);
     const colorScheme = useColorScheme();
 
-    const isDarkMode = colorScheme === 'dark';
+    const { isDarkMode } = useDarkMode();
+
 
     const signIn = async () => {
         setLoading(true);
@@ -27,6 +31,7 @@ export default function LoginScreen() {
 
     return (
         <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+            <StatusBar style={isDarkMode ? 'light' : 'dark'} />
             <KeyboardAvoidingView behavior='padding'>
                 <Text style={[styles.title, isDarkMode && styles.darkText]}>Login</Text>
                 <TextInput

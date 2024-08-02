@@ -1,6 +1,8 @@
 import React from 'react';
 import { ScrollView, View, Text, useColorScheme, StyleSheet, FlatList, ListRenderItem } from 'react-native';
 import { Stack } from 'expo-router';
+import { useDarkMode } from '../../DarkModeContext';
+
 
 const styles = StyleSheet.create({
   container: {
@@ -26,8 +28,7 @@ interface Instruction {
 }
 
 const HowToPage = () => {
-  const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
+  const { isDarkMode } = useDarkMode();
 
   const makeCard: Instruction[] = [
     { key: 'In the "Your Cards" tab, press the + sign to add a card.' },

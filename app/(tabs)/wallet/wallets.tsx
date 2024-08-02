@@ -6,6 +6,9 @@ import { collection, onSnapshot, doc, query, orderBy } from 'firebase/firestore'
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useDarkMode } from '../../DarkModeContext';
+import { StatusBar } from 'expo-status-bar';
+
 
 interface CardData {
   id: string;
@@ -45,7 +48,7 @@ const DisplayCardsScreen: React.FC = () => {
   const colorScheme = useColorScheme();
   const navigation = useNavigation();
 
-  const isDarkMode = colorScheme === 'dark';
+  const { isDarkMode } = useDarkMode();
 
   const fetchCards = useCallback(() => {
     const user = auth.currentUser;
@@ -116,6 +119,7 @@ const DisplayCardsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       <View style={styles.header}>
         <Text style={[styles.headerTitle, isDarkMode && styles.darkText]}>Wallet</Text>
       </View>
