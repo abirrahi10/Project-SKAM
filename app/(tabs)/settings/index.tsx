@@ -121,6 +121,11 @@ const SettingsScreen = () => {
       <Button16 href="/settings/display">
         Display
       </Button16>
+
+      <Button16 href="/settings/HowTo">
+        How to
+      </Button16>
+
     </View>
   );
 };
