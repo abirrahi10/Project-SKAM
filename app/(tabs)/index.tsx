@@ -760,6 +760,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useDarkMode } from '../DarkModeContext';
+import { StatusBar } from 'expo-status-bar';
+
+
 
 interface UserData {
   id: string;
@@ -1384,11 +1388,12 @@ export default function HomeScreen() {
     );
   };
 
-  const isDarkMode = colorScheme === 'dark';
+  const { isDarkMode } = useDarkMode();
 
   if (!user) {
     return (
       <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
         <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>Please log in to view your cards</Text>
       </View>
     );
@@ -1397,6 +1402,7 @@ export default function HomeScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
         {!user ? (
           <>
             <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>Please log in to view your wallet</Text>

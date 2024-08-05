@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, useColorScheme, TouchableOpacity, Alert } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { Link } from 'expo-router';
 import { getAuth, onAuthStateChanged, User, signOut } from 'firebase/auth';
+import { useDarkMode } from '../../DarkModeContext';
+
 
 interface Button16Props {
   children: React.ReactNode;
@@ -83,8 +86,7 @@ const checkUserLoginStatus = (callback: (user: User | null) => void): void => {
 
 
 const SettingsScreen = () => {
-  const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
+  const { isDarkMode } = useDarkMode();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -95,6 +97,7 @@ const SettingsScreen = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       <View style={styles.header}>
         <Text style={[styles.heading, {color: isDarkMode ? '#fff' : '#000'}]}>Settings</Text>
       

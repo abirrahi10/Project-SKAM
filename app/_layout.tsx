@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { DarkModeProvider, useDarkMode } from './DarkModeContext';  // Import the DarkModeProvider and useDarkMode
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -23,11 +24,20 @@ export default function RootLayout() {
   }, [loaded]);
 
   if (!loaded) {
-    return null
+    return null;
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <DarkModeProvider>
+      <ThemedApp />
+    </DarkModeProvider>
+  );
+}
+
+function ThemedApp() {
+  const { isDarkMode } = useDarkMode();
+  return (
+    <ThemeProvider value={isDarkMode ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

@@ -4,6 +4,9 @@ import { router } from 'expo-router';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from "../../firebaseConfig";
 import { doc, setDoc } from 'firebase/firestore';
+import { useDarkMode } from '../DarkModeContext';
+import { StatusBar } from 'expo-status-bar';
+
 
 export default function SignUpScreen() {
     const [email, setEmail] = useState('');
@@ -11,7 +14,8 @@ export default function SignUpScreen() {
     const [loading, setLoading] = useState(false);
     const colorScheme = useColorScheme();
 
-    const isDarkMode = colorScheme === 'dark';
+    const { isDarkMode } = useDarkMode();
+
 
     async function setupNewUser(uid: string) {
         try {
@@ -45,6 +49,7 @@ export default function SignUpScreen() {
 
     return (
         <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+            <StatusBar style={isDarkMode ? 'light' : 'dark'} />
             <KeyboardAvoidingView behavior='padding'>
                 <Text style={[styles.title, isDarkMode && styles.darkText]}>Sign Up</Text>
                 <TextInput
