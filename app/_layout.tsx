@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { ColorProvider } from './ColorConfig';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { DarkModeProvider, useDarkMode } from './DarkModeContext';  // Import the DarkModeProvider and useDarkMode
@@ -37,12 +38,15 @@ export default function RootLayout() {
 function ThemedApp() {
   const { isDarkMode } = useDarkMode();
   return (
-    <ThemeProvider value={isDarkMode ? DarkTheme : DefaultTheme}>
+  <ColorProvider>
+    <ThemeProvider value={isDarkMode ? DarkTheme : DefaultTheme}>  
       <Stack>
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
+    
     </ThemeProvider>
+  </ColorProvider>
   );
 }
