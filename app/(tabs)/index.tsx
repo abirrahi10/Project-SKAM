@@ -1389,7 +1389,7 @@ export default function HomeScreen() {
   if (!user) {
     return (
       <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
-        <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>Please log in to view your cards</Text>
+        <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>Please log in or sign up to view your cards</Text>
       </View>
     );
   }
@@ -1399,7 +1399,7 @@ export default function HomeScreen() {
       <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
         {!user ? (
           <>
-            <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>Please log in to view your wallet</Text>
+            <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>Please log in or sign up to view your cardst</Text>
             <TouchableOpacity 
               style={styles.loginButton} 
               onPress={() => {/* Navigate to Settings/Login page */}}
@@ -1429,7 +1429,7 @@ export default function HomeScreen() {
                 <Icon name="edit" size={24} color="#007bff" />
               )}
             </TouchableOpacity>
-            <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>YOUR CARDS</Text>
+            <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>Your Cards</Text>
             {editMode && <Text style={styles.editModeText}>Select a card to edit, hit Done when finished.</Text>}
             {loading ? (
               <ActivityIndicator size="large" color="#0000ff" />
@@ -1556,7 +1556,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontWeight: 'bold',
-    fontSize: 24,
+    fontSize: 30.5,
     textAlign: 'center',
     marginTop: 50,
     marginBottom: 35,
