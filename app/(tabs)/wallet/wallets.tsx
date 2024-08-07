@@ -1,4 +1,3 @@
-// DisplayCardsScreen.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, useColorScheme, TextInput, TouchableOpacity, FlatList } from 'react-native';
 import { db, auth } from '../../../firebaseConfig';
@@ -6,9 +5,6 @@ import { collection, onSnapshot, doc, query, orderBy } from 'firebase/firestore'
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useDarkMode } from '../../DarkModeContext';
-import { StatusBar } from 'expo-status-bar';
-
 
 interface CardData {
   id: string;
@@ -45,10 +41,31 @@ const DisplayCardsScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('firstName');
   const [filterBy, setFilterBy] = useState<FilterOption>('A');
+  
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const colorScheme = useColorScheme();
   const navigation = useNavigation();
+  const isDarkMode = colorScheme === 'dark';
 
-  const { isDarkMode } = useDarkMode();
+  const handleAddCardPress = () =>{
+    // @ts-ignore
+    navigation.navigate('addCardWallet');
+  };
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsAuthenticated(!!user);
+      if(user){
+        fetchCards();
+      } else {
+        setCards([]);
+        setFilteredCards([]);
+        setLoading(false);
+      }
+    });
+    return () => unsubscribe();
+
+  }, []);
 
   const fetchCards = useCallback(() => {
     const user = auth.currentUser;
@@ -80,16 +97,6 @@ const DisplayCardsScreen: React.FC = () => {
   }, [sortBy]);
 
   useEffect(() => {
-    const unsubscribe = fetchCards();
-    return () => {
-      if(unsubscribe){
-      unsubscribe();
-    }
-  };
-
-  }, [fetchCards]);
-
-  useEffect(() => {
     let filtered = cards.filter(card => 
       card.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       card.lastName?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -119,7 +126,6 @@ const DisplayCardsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       <View style={styles.header}>
         <Text style={[styles.headerTitle, isDarkMode && styles.darkText]}>Wallet</Text>
       </View>
@@ -142,7 +148,7 @@ const DisplayCardsScreen: React.FC = () => {
         </View>
         <TouchableOpacity 
           style={styles.addButton}
-          onPress={() => navigation.navigate('AddCard' as never)}
+          onPress={handleAddCardPress}
         >
           <Ionicons name="add" size={24} color="white" />
         </TouchableOpacity>
