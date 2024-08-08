@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, useColorScheme, TouchableOpacity, TouchableHighlight, TextInput, Modal, Linking, ScrollView, KeyboardAvoidingView, Platform, Switch, Animated } from 'react-native';
 import { db, auth } from '../../firebaseConfig';
@@ -26,7 +25,6 @@ interface UserData {
   linkedin?: string;
   school?: string;
   major?: string;
-  discord?: string;
   additionalInfo?: string;
   instagram?: string;
   twitter?: string;
@@ -101,7 +99,6 @@ const Card: React.FC<{ card: UserData; onPress: () => void; onLongPress: () => v
             {card.facebook && <Icon name="facebook" size={24} color="#3b5998" onPress={() => openUrl(card.facebook)} />}
             {card.linkedin && <Icon name="linkedin" size={24} color="#0077B5" onPress={() => openUrl(card.linkedin)} />}
             {card.snapchat && <Icon name="snapchat" size={24} color="#FFFC00" onPress={() => openUrl(card.snapchat)} />}
-            {card.discord && <Icon name="discord" size={24} color="#7289DA" onPress={() => openUrl(card.discord)} />}
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -122,6 +119,40 @@ export default function HomeScreen() {
   const [user, setUser] = useState<any>(null);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [showSocialMedia, setShowSocialMedia] = useState(false);
+
+  const formatPhoneNumber = (input: string): string => {
+    const cleaned = input.replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+    if (match) {
+      return '(' + match[1] + ')-' + match[2] + '-' + match[3];
+    }
+    return input;
+  };
+
+  const validateRequiredFields = (card: UserData): string[] => {
+    let requiredFields: (keyof UserData)[] = ['firstName', 'lastName'];
+    const missingFields: string[] = [];
+  
+    switch (card.type) {
+      case 'Work':
+        requiredFields = [...requiredFields, 'workNumber', 'workEmail'];
+        break;
+      case 'Student':
+        requiredFields = [...requiredFields, 'phone', 'schoolEmail'];
+        break;
+      case 'Personal':
+        requiredFields = [...requiredFields, 'phone', 'personalEmail'];
+        break;
+    }
+  
+    requiredFields.forEach(field => {
+      if (!card[field]) {
+        missingFields.push(field);
+      }
+    });
+  
+    return missingFields;
+  };
 
   const fetchCards = async (userId: string) => {
     try {
@@ -189,6 +220,12 @@ export default function HomeScreen() {
 
   const handleSave = async () => {
     if (selectedCard && user) {
+      const missingFields = validateRequiredFields(selectedCard);
+      if (missingFields.length > 0) {
+        Alert.alert('Missing Required Fields', `Please fill out the following fields: ${missingFields.join(', ')}`);
+        return;
+      }
+
       try {
         if (isAdding) {
           const cardRef = await addDoc(collection(db, 'cards'), selectedCard);
@@ -218,6 +255,11 @@ export default function HomeScreen() {
     if (selectedCard) {
       if (name === 'additionalUrls' && Array.isArray(value)) {
         setSelectedCard({ ...selectedCard, [name]: value });
+      } else if (name === 'phone' || name === 'workNumber') {
+        // Only allow numbers, limit to 10 digits, and format
+        const numericValue = (value as string).replace(/\D/g, '').slice(0, 10);
+        const formattedValue = formatPhoneNumber(numericValue);
+        setSelectedCard({ ...selectedCard, [name]: formattedValue });
       } else {
         setSelectedCard({ ...selectedCard, [name]: value });
       }
@@ -234,28 +276,32 @@ export default function HomeScreen() {
 
   const handleCardTypeSelect = (type: string) => {
     setCardTypeModalVisible(false);
-    setSelectedCard({ id: '', type, firstName: '', lastName: '', phone: '', workNumber: '', workEmail: '', schoolEmail: '', personalEmail: '', location: '', linkedin: '', school: '', major: '', discord: '', additionalInfo: '', instagram: '', twitter: '', facebook: '', tiktok: '', snapchat: '', birthday: '', additionalUrls: [] });
+    setSelectedCard({ id: '', type, firstName: '', lastName: '', phone: '', workNumber: '', workEmail: '', schoolEmail: '', personalEmail: '', location: '', linkedin: '', school: '', major: '', additionalInfo: '', instagram: '', twitter: '', facebook: '', tiktok: '', snapchat: '', birthday: '', additionalUrls: [] });
     setIsAdding(true);
     setModalVisible(true);
   };
 
   const renderFormFields = () => {
+    const isRequired = (field: keyof UserData) => {
+      const requiredFields: Record<string, (keyof UserData)[]> = {
+        Work: ['firstName', 'lastName', 'workNumber', 'workEmail'],
+        Student: ['firstName', 'lastName', 'phone', 'schoolEmail'],
+        Personal: ['firstName', 'lastName', 'phone', 'personalEmail'],
+      };
+      return selectedCard && requiredFields[selectedCard.type]?.includes(field);
+    };
+
     return (
       <>
+        {isRequired('firstName') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
         <TextInput
-          style={[
-            styles.input,
-            { 
-              color: isDarkMode ? '#fff' : '#000',
-              borderColor: isDarkMode ? '#555' : '#ccc',
-              backgroundColor: isDarkMode ? '#333' : '#fff'
-            }
-          ]}
+          style={[styles.input, { color: isDarkMode ? '#fff' : '#000', borderColor: isDarkMode ? '#555' : '#ccc', backgroundColor: isDarkMode ? '#333' : '#fff' }]}
           placeholder="First Name"
           placeholderTextColor={isDarkMode ? '#999' : '#666'}
           value={selectedCard?.firstName}
           onChangeText={(value) => handleChange('firstName', value)}
         />
+        {isRequired('lastName') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
         <TextInput
           style={[
             styles.input,
@@ -272,20 +318,16 @@ export default function HomeScreen() {
         />
         {selectedCard?.type === 'Work' && (
           <>
+            {isRequired('workNumber') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
-              style={[
-                styles.input,
-                { 
-                  color: isDarkMode ? '#fff' : '#000',
-                  borderColor: isDarkMode ? '#555' : '#ccc',
-                  backgroundColor: isDarkMode ? '#333' : '#fff'
-                }
-              ]}
+              style={[styles.input, { color: isDarkMode ? '#fff' : '#000', borderColor: isDarkMode ? '#555' : '#ccc', backgroundColor: isDarkMode ? '#333' : '#fff' }]}
               placeholder="Work Number"
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={selectedCard.workNumber}
               onChangeText={(value) => handleChange('workNumber', value)}
+              keyboardType="numeric"
             />
+            {isRequired('workEmail') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
               style={[
                 styles.input,
@@ -323,7 +365,7 @@ export default function HomeScreen() {
                   backgroundColor: isDarkMode ? '#333' : '#fff'
                 }
               ]}
-              placeholder="LinkedIn"
+              placeholder="LinkedIn (provide URL)"
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={selectedCard.linkedin}
               onChangeText={(value) => handleChange('linkedin', value)}
@@ -346,20 +388,16 @@ export default function HomeScreen() {
         )}
         {selectedCard?.type === 'Student' && (
           <>
+            {isRequired('phone') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
-              style={[
-                styles.input,
-                { 
-                  color: isDarkMode ? '#fff' : '#000',
-                  borderColor: isDarkMode ? '#555' : '#ccc',
-                  backgroundColor: isDarkMode ? '#333' : '#fff'
-                }
-              ]}
+              style={[styles.input, { color: isDarkMode ? '#fff' : '#000', borderColor: isDarkMode ? '#555' : '#ccc', backgroundColor: isDarkMode ? '#333' : '#fff' }]}
               placeholder="Phone Number"
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={selectedCard.phone}
               onChangeText={(value) => handleChange('phone', value)}
+              keyboardType="numeric"
             />
+            {isRequired('schoolEmail') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
               style={[
                 styles.input,
@@ -383,21 +421,7 @@ export default function HomeScreen() {
                   backgroundColor: isDarkMode ? '#333' : '#fff'
                 }
               ]}
-              placeholder="Personal Email"
-              placeholderTextColor={isDarkMode ? '#999' : '#666'}
-              value={selectedCard.personalEmail}
-              onChangeText={(value) => handleChange('personalEmail', value)}
-            />
-            <TextInput
-              style={[
-                styles.input,
-                { 
-                  color: isDarkMode ? '#fff' : '#000',
-                  borderColor: isDarkMode ? '#555' : '#ccc',
-                  backgroundColor: isDarkMode ? '#333' : '#fff'
-                }
-              ]}
-              placeholder="School Location"
+              placeholder="School Location (City, State)"
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={selectedCard.location}
               onChangeText={(value) => handleChange('location', value)}
@@ -411,7 +435,7 @@ export default function HomeScreen() {
                   backgroundColor: isDarkMode ? '#333' : '#fff'
                 }
               ]}
-              placeholder="LinkedIn"
+              placeholder="LinkedIn (provide URL)"
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={selectedCard.linkedin}
               onChangeText={(value) => handleChange('linkedin', value)}
@@ -425,7 +449,7 @@ export default function HomeScreen() {
                   backgroundColor: isDarkMode ? '#333' : '#fff'
                 }
               ]}
-              placeholder="School"
+              placeholder="School / University"
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={selectedCard.school}
               onChangeText={(value) => handleChange('school', value)}
@@ -453,20 +477,6 @@ export default function HomeScreen() {
                   backgroundColor: isDarkMode ? '#333' : '#fff'
                 }
               ]}
-              placeholder="Discord"
-              placeholderTextColor={isDarkMode ? '#999' : '#666'}
-              value={selectedCard.discord}
-              onChangeText={(value) => handleChange('discord', value)}
-            />
-            <TextInput
-              style={[
-                styles.input,
-                { 
-                  color: isDarkMode ? '#fff' : '#000',
-                  borderColor: isDarkMode ? '#555' : '#ccc',
-                  backgroundColor: isDarkMode ? '#333' : '#fff'
-                }
-              ]}
               placeholder="Additional Info"
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={selectedCard.additionalInfo}
@@ -476,20 +486,16 @@ export default function HomeScreen() {
         )}
         {selectedCard?.type === 'Personal' && (
           <>
+            {isRequired('phone') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
-              style={[
-                styles.input,
-                { 
-                  color: isDarkMode ? '#fff' : '#000',
-                  borderColor: isDarkMode ? '#555' : '#ccc',
-                  backgroundColor: isDarkMode ? '#333' : '#fff'
-                }
-              ]}
+              style={[styles.input, { color: isDarkMode ? '#fff' : '#000', borderColor: isDarkMode ? '#555' : '#ccc', backgroundColor: isDarkMode ? '#333' : '#fff' }]}
               placeholder="Phone Number"
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={selectedCard.phone}
               onChangeText={(value) => handleChange('phone', value)}
+              keyboardType="numeric"
             />
+            {isRequired('personalEmail') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
               style={[
                 styles.input,
@@ -513,7 +519,7 @@ export default function HomeScreen() {
                   backgroundColor: isDarkMode ? '#333' : '#fff'
                 }
               ]}
-              placeholder="Location"
+              placeholder="Location (City, State)"
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={selectedCard.location}
               onChangeText={(value) => handleChange('location', value)}
@@ -567,7 +573,7 @@ export default function HomeScreen() {
                       backgroundColor: isDarkMode ? '#333' : '#fff'
                     }
                   ]}
-                  placeholder="Facebook"
+                  placeholder="Facebook (provide URL)"
                   placeholderTextColor={isDarkMode ? '#999' : '#666'}
                   value={selectedCard.facebook}
                   onChangeText={(value) => handleChange('facebook', value)}
@@ -581,7 +587,7 @@ export default function HomeScreen() {
                       backgroundColor: isDarkMode ? '#333' : '#fff'
                     }
                   ]}
-                  placeholder="TikTok"
+                  placeholder="TikTok (provide URL)"
                   placeholderTextColor={isDarkMode ? '#999' : '#666'}
                   value={selectedCard.tiktok}
                   onChangeText={(value) => handleChange('tiktok', value)}
@@ -595,7 +601,7 @@ export default function HomeScreen() {
                       backgroundColor: isDarkMode ? '#333' : '#fff'
                     }
                   ]}
-                  placeholder="Snapchat"
+                  placeholder="Snapchat (provide URL)"
                   placeholderTextColor={isDarkMode ? '#999' : '#666'}
                   value={selectedCard.snapchat}
                   onChangeText={(value) => handleChange('snapchat', value)}
@@ -777,7 +783,6 @@ export default function HomeScreen() {
                       <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Location: {selectedCard.location}</Text>
                       <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>School: {selectedCard.school}</Text>
                       <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Major: {selectedCard.major}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Discord: {selectedCard.discord}</Text>
                       <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Additional Info: {selectedCard.additionalInfo}</Text>
                       <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Instagram: {selectedCard.instagram}</Text>
                       <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Twitter: {selectedCard.twitter}</Text>
@@ -986,11 +991,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   input: {
+    flex: 1,
     borderWidth: 2,
     borderColor: '#ccc',  // This will be overridden inline for dark mode
     padding: 15,
     marginBottom: 10,
     borderRadius: 8,
     fontSize: 16,
+  },
+  requiredAsterisk: {
+    color: 'red',
+    marginLeft: 5,
   },
 });
