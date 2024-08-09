@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, Stack } from 'expo-router';
 
 interface Button16Props {
   children: React.ReactNode;
@@ -19,8 +19,13 @@ const Button16: React.FC<Button16Props> = ({ children, href }) => (
 const AccountPage = () => {
   return (
     <View style={styles.container} >
+      <Stack.Screen options={{ headerTitle: 'Account' }} />
       <Button16 href="/settings/changePassword">
         Change Password
+      </Button16>
+
+      <Button16 href="/settings/changeEmail">
+        Change Email
       </Button16>
       
     </View>
