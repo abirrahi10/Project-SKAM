@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, useColorScheme } from 'react-native';
 import { getAuth, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from 'firebase/auth';
 import { useRouter } from 'expo-router';
+import { useDarkMode } from '../../DarkModeContext';
+
 
 const ChangePasswordPage = () => {
   const [oldPassword, setOldPassword] = useState('');
@@ -9,7 +11,8 @@ const ChangePasswordPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
+  const { isDarkMode } = useDarkMode();
+
 
   const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
@@ -83,18 +86,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#007bff',
     borderWidth: 1,
-    borderColor: '#f8f9fa',
     borderRadius: 4,
     padding: 10,
     alignItems: 'center',
     marginTop: 10,
   },
   buttonText: {
-    color: '#3c4043',
+    color: 'white',
     fontFamily: 'Arial',
-    fontSize: 14,
+    fontSize: 15,
   },
 });
 

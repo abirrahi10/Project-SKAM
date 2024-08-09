@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Alert, StyleSheet, useColorScheme, TouchableOpacity, Text } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useDarkMode } from '../../DarkModeContext';
 import { getAuth, EmailAuthProvider, reauthenticateWithCredential, updateEmail } from 'firebase/auth';
 
 const ChangeEmailPage = () => {
@@ -9,7 +10,7 @@ const ChangeEmailPage = () => {
   const [newEmail, setNewEmail] = useState('');
   const router = useRouter();
   const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
+  const { isDarkMode } = useDarkMode();
 
   const handleChangeEmail = async () => {
     try {
@@ -81,18 +82,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#007bff',
     borderWidth: 1,
-    borderColor: '#f8f9fa',
     borderRadius: 4,
     padding: 10,
     alignItems: 'center',
     marginTop: 10,
   },
   buttonText: {
-    color: '#3c4043',
+    color: 'white',
     fontFamily: 'Arial',
-    fontSize: 14,
+    fontSize: 15,
   },
 });
 

@@ -27,6 +27,10 @@ const AccountPage = () => {
       <Button16 href="/settings/changeEmail">
         Change Email
       </Button16>
+
+      <Button16 href="/settings/deleteAccount">
+        Delete Account
+      </Button16>
       
     </View>
   );
@@ -39,11 +43,9 @@ const styles = StyleSheet.create({
     paddingTop: 50,
   },
   button: {
-    backgroundColor: '#f8f9fa',
-    borderWidth: 1,
-    borderColor: '#f8f9fa',
-    borderRadius: 4,
-    padding: 10,
+    backgroundColor: '#dddddd',
+    borderRadius: 5,
+    padding: 20,
     minWidth: 54,
     alignItems: 'center',
     marginBottom: 10,
@@ -51,7 +53,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#3c4043',
     fontFamily: 'Arial',
-    fontSize: 14,
+    fontSize: 16,
   },
 });
 

@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
 import { router } from 'expo-router';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from "../../firebaseConfig";
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, serverTimestamp  } from 'firebase/firestore';
 import { useDarkMode } from '../DarkModeContext';
 import { StatusBar } from 'expo-status-bar';
 
@@ -19,11 +19,9 @@ export default function SignUpScreen() {
 
     async function setupNewUser(uid: string) {
         try {
-            // Create empty user document
             await setDoc(doc(db, 'users', uid), {});
+            await setDoc(doc(db, 'wallets', uid), {});
             
-            // Create empty wallet document
-            await setDoc(doc(db, 'wallets', uid), { cards: [] });
             
             console.log('New user documents created successfully');
         } catch (error) {
