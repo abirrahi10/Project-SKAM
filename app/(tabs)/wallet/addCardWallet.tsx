@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { useColorScheme, View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { db, auth } from '../../../firebaseConfig';
 import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationOptions } from '@react-navigation/stack';
+import { Ionicons } from '@expo/vector-icons';
 
 
 interface CardData {
@@ -20,7 +21,8 @@ const AddCardScreen: React.FC = () => {
   const [searchResults, setSearchResults] = useState<CardData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
   const navigation = useNavigation();
 
   useFocusEffect(() => {
@@ -160,6 +162,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+  searchIcon: {
+    marginRight: 10,
+  },
   container: {
     flex: 1,
     padding: 20,
@@ -170,13 +175,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 10,
+    borderRadius: 10,
     color: 'gray',
   },
   searchButton: {
-    backgroundColor: 'blue',
+    backgroundColor: '#007bff',
     padding: 10,
     alignItems: 'center',
     marginBottom: 20,
+    borderRadius: 10,
   },
   card: {
     backgroundColor: '#f0f0f0',

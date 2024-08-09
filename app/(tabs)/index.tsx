@@ -120,14 +120,6 @@ export default function HomeScreen() {
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [showSocialMedia, setShowSocialMedia] = useState(false);
 
-  const formatPhoneNumber = (input: string): string => {
-    const cleaned = input.replace(/\D/g, '');
-    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-    if (match) {
-      return '(' + match[1] + ')-' + match[2] + '-' + match[3];
-    }
-    return input;
-  };
 
   const validateRequiredFields = (card: UserData): string[] => {
     let requiredFields: (keyof UserData)[] = ['firstName', 'lastName'];
@@ -258,7 +250,7 @@ export default function HomeScreen() {
       } else if (name === 'phone' || name === 'workNumber') {
         // Only allow numbers, limit to 10 digits, and format
         const numericValue = (value as string).replace(/\D/g, '').slice(0, 10);
-        const formattedValue = formatPhoneNumber(numericValue);
+        const formattedValue = numericValue;
         setSelectedCard({ ...selectedCard, [name]: formattedValue });
       } else {
         setSelectedCard({ ...selectedCard, [name]: value });

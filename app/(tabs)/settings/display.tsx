@@ -25,7 +25,7 @@ const gradients = [
 ];
 
 const cardColors = gradients.map((gradient, index) => ({
-  label: `Color ${index + 1}`,
+  label: `Gradient ${index + 1}`,
   value: `item${index + 1}`,
   gradient: gradient,
 }));
@@ -45,9 +45,9 @@ const DropdownComponent = () => {
       colors={item.gradient}
       start={{ x: 0, y: 0.5 }}
       end={{ x: 1, y: 0.5 }}
-      style={[styles.item, { backgroundColor: 'grey' }]} // Set background color for each item
+      style={[styles.item, { backgroundColor: 'grey' }]}
     >
-      <Text style={[styles.itemText, { color: isDarkMode ? '#fff' : '#000' }]}>
+      <Text style={[styles.itemText, { color: '#000' }]}>
         {item.label}
       </Text>
     </LinearGradient>
@@ -56,8 +56,8 @@ const DropdownComponent = () => {
   return (
     <Dropdown
     style={[styles.dropdown]}
-    containerStyle={{ backgroundColor: 'black' }} // Set background color for the dropdown container
-    placeholderStyle={[styles.placeholderStyle, { color: isDarkMode ? '#fff' : '#000', fontSize: 20 }]}
+    containerStyle={{ backgroundColor: isDarkMode ? '#000' : '#fff' }} // Set background color for the dropdown container
+    placeholderStyle={[styles.placeholderStyle, { color: '#000', fontSize: 20 }]}
     selectedTextStyle={[styles.selectedTextStyle, { color: isDarkMode ? '#fff' : '#000' }]}
     inputSearchStyle={[styles.inputSearchStyle, { color: isDarkMode ? '#fff' : '#000' }]}
     iconStyle={styles.iconStyle}
@@ -65,12 +65,12 @@ const DropdownComponent = () => {
     maxHeight={300}
     labelField="label"
     valueField="value"
-    placeholder="Change color"
+    placeholder="Change Card Background"
     searchPlaceholder="Search..."
     value={value}
     onChange={item => handleColorChange(item)}
     renderRightIcon={() => (
-      <AntDesign style={[styles.icon, { color: isDarkMode ? '#fff' : '#000' }]} name="down" size={20} />
+      <AntDesign style={[styles.icon, { color: '#000' }]} name="down" size={20} />
     )}
     renderItem={renderItem}
   />
@@ -87,10 +87,10 @@ const DisplayPage = () => {
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
 
       <View style={styles.switchContainer}>
-        <Text style={[styles.switchName, { color: isDarkMode ? '#fff' : '#000' }]}>Dark mode</Text>
+        <Text style={[styles.switchName, { color: '#000' }]}>Toggle Dark Mode</Text>
         <Switch
-          trackColor={{ false: '#81b0ff', true: '#767577' }}
-          thumbColor={isDarkMode ? '#f4f3f4' : '#f5dd4b'}
+          trackColor={{ false: '#81b0ff', true: 'green' }}
+          thumbColor={'#f4f3f4'}
           ios_backgroundColor="#3e3e3e"
           onValueChange={toggleDarkMode}
           value={isDarkMode}
@@ -111,10 +111,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'grey',
+    backgroundColor: '#dddddd',
     height: 50,
     paddingHorizontal: 20,
-    borderRadius: 25,
+    borderRadius: 10,
     marginHorizontal: 20,
     marginVertical: 10,
   },
@@ -123,18 +123,15 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   dropdown: {
-    backgroundColor:"grey",
+    backgroundColor:"#dddddd",
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     height: 50,
     paddingHorizontal: 20,
-    borderColor:"black",
-    borderRadius: 25,
+    borderRadius: 10,
     marginHorizontal: 20,
     marginVertical: 10,
-    borderBottomColor: 'gray',
-    borderBottomWidth: 0.5,
   },
   icon: {
     marginRight: 5,
@@ -155,7 +152,7 @@ const styles = StyleSheet.create({
   },
   item: {
     padding: 20, 
-    height: 60,  
+    height: 80,  
     borderRadius: 5,
     marginVertical: 5,
     backgroundColor: 'black',
