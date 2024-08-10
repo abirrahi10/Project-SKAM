@@ -191,19 +191,6 @@ export default function HomeScreen() {
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [showSocialMedia, setShowSocialMedia] = useState(false);
 
-  const formatPhoneNumber = (input: string) => {
-    // Remove all non-digit characters
-    const number = input.replace(/\D/g, '');
-    
-    // Format the number
-    if (number.length <= 3) {
-      return number;
-    } else if (number.length <= 6) {
-      return `(${number.slice(0, 3)}) ${number.slice(3)}`;
-    } else {
-      return `(${number.slice(0, 3)}) ${number.slice(3, 6)}-${number.slice(6, 10)}`;
-    }
-  };
 
   const validateRequiredFields = (card: UserData): string[] => {
     let requiredFields: (keyof UserData)[] = ['firstName', 'lastName'];
@@ -333,7 +320,7 @@ export default function HomeScreen() {
         setSelectedCard({ ...selectedCard, [name]: value });
       } else if (name === 'phone' || name === 'workNumber') {
         // Format the phone number
-        const formattedValue = formatPhoneNumber(value as string);
+        const formattedValue = (value as string);
         setSelectedCard({ ...selectedCard, [name]: formattedValue });
       } else {
         setSelectedCard({ ...selectedCard, [name]: value });
