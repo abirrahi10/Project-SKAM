@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useDarkMode } from '../../DarkModeContext';
+import { useColors } from '@/app/ColorConfig';
 
 interface CardData {
   id: string;
@@ -47,6 +48,8 @@ const DisplayCardsScreen: React.FC = () => {
   const colorScheme = useColorScheme();
   const navigation = useNavigation();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { colors } = useColors();
+
 
 
   const handleAddCardPress = () =>{
@@ -114,14 +117,13 @@ const DisplayCardsScreen: React.FC = () => {
 
   const renderCard = ({ item }: { item: CardData }) => (
     <LinearGradient
-      colors={['#cdffd8', '#94b9ff']}
+      colors={colors}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.card}
     >
       <Text style={[styles.cardText]}>First Name: {item.firstName}</Text>
       <Text style={[styles.cardText]}>Last Name: {item.lastName}</Text>
-      <Text style={[styles.cardText]}>Born: {item.birthday}</Text>
       <Text style={[styles.cardText]}>Type: {item.type}</Text>
     </LinearGradient>
   );
@@ -297,8 +299,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   cardText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#000000',
+    marginTop: 5,
   },
   noCardText: {
     fontSize: 18,

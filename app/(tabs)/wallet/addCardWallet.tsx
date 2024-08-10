@@ -5,6 +5,10 @@ import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firesto
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationOptions } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useColors} from '../../ColorConfig';
+import {LinearGradient} from 'expo-linear-gradient';
+
+
 
 
 interface CardData {
@@ -24,6 +28,8 @@ const AddCardScreen: React.FC = () => {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
   const navigation = useNavigation();
+  const { colors } = useColors();
+
 
   useFocusEffect(() => {
 navigation.setOptions({
@@ -104,8 +110,8 @@ navigation.setOptions({
   };
 
   const renderCard = ({ item }: { item: CardData }) => (
+    
     <TouchableOpacity
-      style={styles.card}
       onPress={() => {
         Alert.alert(
           'Add Card',
@@ -117,17 +123,23 @@ navigation.setOptions({
         );
       }}
     >
-      <Text>Name: {item.firstName} {item.lastName}</Text>
-      <Text>Born: {item.born}</Text>
-      <Text>Type: {item.type}</Text>
-      <Text>Phone: {item.phone}</Text>
+      <LinearGradient
+          colors={colors}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.card}
+        >
+        <Text style={[styles.cardText]}>Name: {item.firstName} {item.lastName}</Text>
+        <Text style={[styles.cardText]}>Phone: {item.phone}</Text>
+        <Text style={[styles.cardText]}>Type: {item.type}</Text>
+      </LinearGradient>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
       <TextInput
-        style={styles.searchInput}
+        style={[styles.searchInput, { color: isDarkMode ? '#fff' : '#000' }]}
         placeholder="Enter phone number"
         placeholderTextColor="gray"
         value={searchQuery}
@@ -160,7 +172,6 @@ navigation.setOptions({
 const styles = StyleSheet.create({
   buttonText:{
     color: 'white',
-    fontWeight: 'bold',
   },
   searchIcon: {
     marginRight: 10,
@@ -176,7 +187,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: 10,
     borderRadius: 10,
-    color: 'gray',
   },
   searchButton: {
     backgroundColor: '#007bff',
@@ -197,6 +207,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'gray',
   },
+  cardText: {
+    fontSize: 15,
+    marginTop: 5,
+  }
 });
 
 export default AddCardScreen;
