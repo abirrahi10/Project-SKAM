@@ -9,8 +9,6 @@ import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler'
 import { useDarkMode } from '../DarkModeContext';
 import { StatusBar } from 'expo-status-bar';
 import { useColors} from '../ColorConfig';
-
-
 interface UserData {
   id: string;
   type: string;
@@ -37,8 +35,32 @@ interface UserData {
 
 const Card: React.FC<{ card: UserData; onPress: () => void; onLongPress: () => void; onDelete: () => void; editMode: boolean }> = ({ card, onPress, onLongPress, onDelete, editMode }) => {
   const { colors } = useColors();
-  const openUrl = (url?: string) => {
-    if (url) {
+
+  const openUrl = (platform: string, username?: string) => {
+    if (username) {
+      let url;
+      switch (platform) {
+        case 'instagram':
+          url = `https://www.instagram.com/${username}`;
+          break;
+        case 'twitter':
+          url = `https://twitter.com/${username}`;
+          break;
+        case 'facebook':
+          url = `https://www.facebook.com/${username}`;
+          break;
+        case 'tiktok':
+          url = `https://www.tiktok.com/@${username}`;
+          break;
+        case 'snapchat':
+          url = `https://www.snapchat.com/add/${username}`;
+          break;
+        case 'linkedin':
+          url = `https://www.linkedin.com/in/${username}`;
+          break;
+        default:
+          url = username; // If no platform is specified, use the username as the URL, for additional URLs
+      }
       Linking.openURL(url);
     }
   };
@@ -72,6 +94,61 @@ const Card: React.FC<{ card: UserData; onPress: () => void; onLongPress: () => v
     );
   };
 
+  const renderCardDetails = () => {
+    switch (card.type) {
+      case 'Personal':
+        return (
+          <>
+            <Text style={styles.cardName}>{`${card.firstName} ${card.lastName}`}</Text>
+            <Text style={styles.cardPhone}>{card.phone}</Text>
+            <Text style={styles.cardEmail}>{card.personalEmail}</Text>
+            <Text style={styles.cardLocation}>{card.location}</Text>
+          </>
+        );
+      case 'Student':
+        return (
+          <>
+            <Text style={styles.cardName}>{`${card.firstName} ${card.lastName}`}</Text>
+            <Text style={styles.cardPhone}>{card.phone}</Text>
+            <Text style={styles.cardEmail}>{card.schoolEmail}</Text>
+            <Text style={styles.cardSchool}>{card.school}</Text>
+            <Text style={styles.cardMajor}>{card.major}</Text>
+          </>
+        );
+      case 'Work':
+        return (
+          <>
+            <Text style={styles.cardName}>{`${card.firstName} ${card.lastName}`}</Text>
+            <Text style={styles.cardPhone}>{card.workNumber}</Text>
+            <Text style={styles.cardEmail}>{card.workEmail}</Text>
+            <Text style={styles.cardLocation}>{card.location}</Text>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderSocialIcons = (card: UserData) => {
+    switch (card.type) {
+      case 'Personal':
+        return (
+          <>
+            {card.instagram && <Icon name="instagram" size={24} color="#C13584" onPress={() => openUrl('instagram', card.instagram)} />}
+            {card.twitter && <Icon name="twitter" size={24} color="#1DA1F2" onPress={() => openUrl('twitter', card.twitter)} />}
+            {card.facebook && <Icon name="facebook" size={24} color="#3b5998" onPress={() => openUrl('facebook', card.facebook)} />}
+            {card.tiktok && <Icon name="tiktok" size={24} color="#000000" onPress={() => openUrl('tiktok', card.tiktok)} />}
+            {card.snapchat && <Icon name="snapchat" size={24} color="#FFFC00" onPress={() => openUrl('snapchat', card.snapchat)} />}
+          </>
+        );
+      case 'Student':
+      case 'Work':
+        return card.linkedin && <Icon name="linkedin" size={24} color="#0077B5" onPress={() => openUrl('linkedin', card.linkedin)} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <Swipeable renderRightActions={renderRightActions}>
       <TouchableOpacity 
@@ -88,17 +165,11 @@ const Card: React.FC<{ card: UserData; onPress: () => void; onLongPress: () => v
           <View style={styles.cardContent}>
             <View style={styles.cardText}>
               <Text style={styles.cardType}>{card.type}</Text>
-              <Text style={styles.cardName}>{`${card.firstName} ${card.lastName}`}</Text>
-              {card.phone && <Text style={styles.cardPhone}>{card.phone}</Text>}
-              {card.personalEmail && <Text style={styles.cardEmail}>{card.personalEmail}</Text>}
+              {renderCardDetails()}
             </View>
           </View>
           <View style={styles.socialIcons}>
-            {card.instagram && <Icon name="instagram" size={24} color="#C13584" onPress={() => openUrl(card.instagram)} />}
-            {card.twitter && <Icon name="twitter" size={24} color="#1DA1F2" onPress={() => openUrl(card.twitter)} />}
-            {card.facebook && <Icon name="facebook" size={24} color="#3b5998" onPress={() => openUrl(card.facebook)} />}
-            {card.linkedin && <Icon name="linkedin" size={24} color="#0077B5" onPress={() => openUrl(card.linkedin)} />}
-            {card.snapchat && <Icon name="snapchat" size={24} color="#FFFC00" onPress={() => openUrl(card.snapchat)} />}
+            {renderSocialIcons(card)}
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -120,6 +191,19 @@ export default function HomeScreen() {
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [showSocialMedia, setShowSocialMedia] = useState(false);
 
+  const formatPhoneNumber = (input: string) => {
+    // Remove all non-digit characters
+    const number = input.replace(/\D/g, '');
+    
+    // Format the number
+    if (number.length <= 3) {
+      return number;
+    } else if (number.length <= 6) {
+      return `(${number.slice(0, 3)}) ${number.slice(3)}`;
+    } else {
+      return `(${number.slice(0, 3)}) ${number.slice(3, 6)}-${number.slice(6, 10)}`;
+    }
+  };
 
   const validateRequiredFields = (card: UserData): string[] => {
     let requiredFields: (keyof UserData)[] = ['firstName', 'lastName'];
@@ -127,13 +211,13 @@ export default function HomeScreen() {
   
     switch (card.type) {
       case 'Work':
-        requiredFields = [...requiredFields, 'workNumber', 'workEmail'];
+        requiredFields = [...requiredFields, 'workNumber', 'workEmail', 'location'];
         break;
       case 'Student':
-        requiredFields = [...requiredFields, 'phone', 'schoolEmail'];
+        requiredFields = [...requiredFields, 'phone', 'schoolEmail', 'school', 'major'];
         break;
       case 'Personal':
-        requiredFields = [...requiredFields, 'phone', 'personalEmail'];
+        requiredFields = [...requiredFields, 'phone', 'personalEmail', 'location'];
         break;
     }
   
@@ -248,9 +332,8 @@ export default function HomeScreen() {
       if (name === 'additionalUrls' && Array.isArray(value)) {
         setSelectedCard({ ...selectedCard, [name]: value });
       } else if (name === 'phone' || name === 'workNumber') {
-        // Only allow numbers, limit to 10 digits, and format
-        const numericValue = (value as string).replace(/\D/g, '').slice(0, 10);
-        const formattedValue = numericValue;
+        // Format the phone number
+        const formattedValue = formatPhoneNumber(value as string);
         setSelectedCard({ ...selectedCard, [name]: formattedValue });
       } else {
         setSelectedCard({ ...selectedCard, [name]: value });
@@ -274,11 +357,11 @@ export default function HomeScreen() {
   };
 
   const renderFormFields = () => {
-    const isRequired = (field: keyof UserData) => {
+    const isRequired = (field: keyof UserData) => { // Check if field is required based on card type
       const requiredFields: Record<string, (keyof UserData)[]> = {
-        Work: ['firstName', 'lastName', 'workNumber', 'workEmail'],
-        Student: ['firstName', 'lastName', 'phone', 'schoolEmail'],
-        Personal: ['firstName', 'lastName', 'phone', 'personalEmail'],
+        Work: ['firstName', 'lastName', 'workNumber', 'workEmail', 'location'],
+        Student: ['firstName', 'lastName', 'phone', 'schoolEmail', 'school', 'major'],
+        Personal: ['firstName', 'lastName', 'phone', 'personalEmail', 'location'],
       };
       return selectedCard && requiredFields[selectedCard.type]?.includes(field);
     };
@@ -313,11 +396,12 @@ export default function HomeScreen() {
             {isRequired('workNumber') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
               style={[styles.input, { color: isDarkMode ? '#fff' : '#000', borderColor: isDarkMode ? '#555' : '#ccc', backgroundColor: isDarkMode ? '#333' : '#fff' }]}
-              placeholder="Work Number"
+              placeholder="Work Phone Number"
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
-              value={selectedCard.workNumber}
+              value={selectedCard.phone}
               onChangeText={(value) => handleChange('workNumber', value)}
               keyboardType="numeric"
+              maxLength={14} // (xxx) xxx-xxxx is 14 characters
             />
             {isRequired('workEmail') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
@@ -334,6 +418,7 @@ export default function HomeScreen() {
               value={selectedCard.workEmail}
               onChangeText={(value) => handleChange('workEmail', value)}
             />
+            {isRequired('location') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
               style={[
                 styles.input,
@@ -357,7 +442,7 @@ export default function HomeScreen() {
                   backgroundColor: isDarkMode ? '#333' : '#fff'
                 }
               ]}
-              placeholder="LinkedIn (provide URL)"
+              placeholder="LinkedIn username"
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={selectedCard.linkedin}
               onChangeText={(value) => handleChange('linkedin', value)}
@@ -388,6 +473,7 @@ export default function HomeScreen() {
               value={selectedCard.phone}
               onChangeText={(value) => handleChange('phone', value)}
               keyboardType="numeric"
+              maxLength={14} // (xxx) xxx-xxxx is 14 characters
             />
             {isRequired('schoolEmail') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
@@ -427,11 +513,12 @@ export default function HomeScreen() {
                   backgroundColor: isDarkMode ? '#333' : '#fff'
                 }
               ]}
-              placeholder="LinkedIn (provide URL)"
+              placeholder="LinkedIn username"
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={selectedCard.linkedin}
               onChangeText={(value) => handleChange('linkedin', value)}
             />
+            {isRequired('school') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
               style={[
                 styles.input,
@@ -446,6 +533,7 @@ export default function HomeScreen() {
               value={selectedCard.school}
               onChangeText={(value) => handleChange('school', value)}
             />
+            {isRequired('major') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
               style={[
                 styles.input,
@@ -486,6 +574,7 @@ export default function HomeScreen() {
               value={selectedCard.phone}
               onChangeText={(value) => handleChange('phone', value)}
               keyboardType="numeric"
+              maxLength={14} // (xxx) xxx-xxxx is 14 characters
             />
             {isRequired('personalEmail') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
@@ -502,6 +591,7 @@ export default function HomeScreen() {
               value={selectedCard.personalEmail}
               onChangeText={(value) => handleChange('personalEmail', value)}
             />
+            {isRequired('location') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
               style={[
                 styles.input,
@@ -517,15 +607,15 @@ export default function HomeScreen() {
               onChangeText={(value) => handleChange('location', value)}
             />
             <View style={styles.socialMediaToggle}>
-            <Text>Show Social Media</Text>
-            <Switch
-              trackColor={{ false: "#CBD8CF", true: "#36c244" }}
-              thumbColor={showSocialMedia ? "#f4f3f4" : "#f4f3f4"}
-              ios_backgroundColor="#CBD8CF"
-              onValueChange={() => setShowSocialMedia(!showSocialMedia)}
-              value={showSocialMedia}
-            />
-          </View>
+              <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Show Social Media</Text>
+              <Switch
+                trackColor={{ false: "#CBD8CF", true: "#36c244" }}
+                thumbColor={showSocialMedia ? "#f4f3f4" : "#f4f3f4"}
+                ios_backgroundColor="#CBD8CF"
+                onValueChange={() => setShowSocialMedia(!showSocialMedia)}
+                value={showSocialMedia}
+              />
+            </View>
             {showSocialMedia && (
               <>
                 <TextInput
@@ -537,7 +627,7 @@ export default function HomeScreen() {
                       backgroundColor: isDarkMode ? '#333' : '#fff'
                     }
                   ]}
-                  placeholder="Instagram (provide URL)"
+                  placeholder="Instagram username"
                   placeholderTextColor={isDarkMode ? '#999' : '#666'}
                   value={selectedCard.instagram}
                   onChangeText={(value) => handleChange('instagram', value)}
@@ -551,7 +641,7 @@ export default function HomeScreen() {
                       backgroundColor: isDarkMode ? '#333' : '#fff'
                     }
                   ]}
-                  placeholder="Twitter (provide URL)"
+                  placeholder="Twitter username"
                   placeholderTextColor={isDarkMode ? '#999' : '#666'}
                   value={selectedCard.twitter}
                   onChangeText={(value) => handleChange('twitter', value)}
@@ -565,7 +655,7 @@ export default function HomeScreen() {
                       backgroundColor: isDarkMode ? '#333' : '#fff'
                     }
                   ]}
-                  placeholder="Facebook (provide URL)"
+                  placeholder="Facebook username"
                   placeholderTextColor={isDarkMode ? '#999' : '#666'}
                   value={selectedCard.facebook}
                   onChangeText={(value) => handleChange('facebook', value)}
@@ -579,7 +669,7 @@ export default function HomeScreen() {
                       backgroundColor: isDarkMode ? '#333' : '#fff'
                     }
                   ]}
-                  placeholder="TikTok (provide URL)"
+                  placeholder="TikTok username"
                   placeholderTextColor={isDarkMode ? '#999' : '#666'}
                   value={selectedCard.tiktok}
                   onChangeText={(value) => handleChange('tiktok', value)}
@@ -593,7 +683,7 @@ export default function HomeScreen() {
                       backgroundColor: isDarkMode ? '#333' : '#fff'
                     }
                   ]}
-                  placeholder="Snapchat (provide URL)"
+                  placeholder="Snapchat username"
                   placeholderTextColor={isDarkMode ? '#999' : '#666'}
                   value={selectedCard.snapchat}
                   onChangeText={(value) => handleChange('snapchat', value)}
@@ -701,29 +791,62 @@ export default function HomeScreen() {
             )}
   
             <Modal
-              animationType="slide"
-              transparent={false}
-              visible={cardTypeModalVisible}
-              onRequestClose={() => setCardTypeModalVisible(false)}>
-              <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
-                <Text style={[styles.modalTitle, { color: isDarkMode ? '#fff' : '#000' }]}>Select Card Type</Text>
-                {['Student', 'Work', 'Personal'].map(type => (
-                  <TouchableHighlight
-                    key={type}
-                    style={[
-                      styles.cardTypeButton,
-                      createdCardTypes.has(type) && styles.disabledButton
-                    ]}
-                    onPress={() => !createdCardTypes.has(type) && handleCardTypeSelect(type)}
-                    disabled={createdCardTypes.has(type)}>
-                    <Text style={styles.cardTypeButtonText}>{type}</Text>
-                  </TouchableHighlight>
-                ))}
-                <TouchableOpacity style={styles.cancelButton} onPress={() => setCardTypeModalVisible(false)}>
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+            animationType="slide"
+            transparent={false}
+            visible={detailsModalVisible}
+            onRequestClose={() => setDetailsModalVisible(false)}>
+            <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
+              <Text style={[styles.modalTitle, { color: isDarkMode ? '#fff' : '#000' }]}>Card Details</Text>
+              <ScrollView>
+                {selectedCard && (
+                  <View>
+                    <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Card Type: {selectedCard.type}</Text>
+                    <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Name: {selectedCard.firstName} {selectedCard.lastName}</Text>
+                    
+                    {selectedCard.type === 'Personal' && (
+                      <>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Phone: {selectedCard.phone}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Personal Email: {selectedCard.personalEmail}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Location: {selectedCard.location}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Instagram: {selectedCard.instagram}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Twitter: {selectedCard.twitter}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Facebook: {selectedCard.facebook}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>TikTok: {selectedCard.tiktok}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Snapchat: {selectedCard.snapchat}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Birthday: {selectedCard.birthday}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Additional Info: {selectedCard.additionalInfo}</Text>
+                      </>
+                    )}
+
+                    {selectedCard.type === 'Work' && (
+                      <>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Work Number: {selectedCard.workNumber}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Work Email: {selectedCard.workEmail}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Location: {selectedCard.location}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>LinkedIn: {selectedCard.linkedin}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Additional URLs: {selectedCard.additionalUrls?.join(', ')}</Text>
+                      </>
+                    )}
+
+                    {selectedCard.type === 'Student' && (
+                      <>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Phone: {selectedCard.phone}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>School Email: {selectedCard.schoolEmail}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>School Location: {selectedCard.location}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>LinkedIn: {selectedCard.linkedin}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>School / University: {selectedCard.school}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Major: {selectedCard.major}</Text>
+                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Additional Info: {selectedCard.additionalInfo}</Text>
+                      </>
+                    )}
+                  </View>
+                )}
+                <TouchableOpacity style={styles.cancelButton} onPress={() => setDetailsModalVisible(false)}>
+                  <Text style={styles.cancelButtonText}>Close</Text>
                 </TouchableOpacity>
-              </View>
-            </Modal>
+              </ScrollView>
+            </View>
+          </Modal>
   
             <Modal
               animationType="slide"
@@ -876,6 +999,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   cardEmail: {
+    marginTop: 5,
+    fontSize: 15,
+  },
+  cardLocation: {
+    marginTop: 5,
+    fontSize: 15,
+  },
+  cardSchool: {
+    marginTop: 5,
+    fontSize: 15,
+  },
+  cardMajor: {
     marginTop: 5,
     fontSize: 15,
   },
