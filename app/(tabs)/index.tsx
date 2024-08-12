@@ -776,6 +776,31 @@ export default function HomeScreen() {
                 ))}
               </ScrollView>
             )}
+
+            <Modal
+              animationType="slide"
+              transparent={false}
+              visible={cardTypeModalVisible}
+              onRequestClose={() => setCardTypeModalVisible(false)}>
+              <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
+                <Text style={[styles.modalTitle, { color: isDarkMode ? '#fff' : '#000' }]}>Select Card Type</Text>
+                {['Student', 'Work', 'Personal'].map(type => (
+                  <TouchableHighlight
+                    key={type}
+                    style={[
+                      styles.cardTypeButton,
+                      createdCardTypes.has(type) && styles.disabledButton
+                    ]}
+                    onPress={() => !createdCardTypes.has(type) && handleCardTypeSelect(type)}
+                    disabled={createdCardTypes.has(type)}>
+                    <Text style={styles.cardTypeButtonText}>{type}</Text>
+                  </TouchableHighlight>
+                ))}
+                <TouchableOpacity style={styles.cancelButton} onPress={() => setCardTypeModalVisible(false)}>
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </Modal>
   
             <Modal
             animationType="slide"
@@ -862,43 +887,6 @@ export default function HomeScreen() {
                     )}
                   </ScrollView>
                 </KeyboardAvoidingView>
-              </View>
-            </Modal>
-  
-            <Modal
-              animationType="slide"
-              transparent={false}
-              visible={detailsModalVisible}
-              onRequestClose={() => setDetailsModalVisible(false)}>
-              <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
-                <Text style={[styles.modalTitle, { color: isDarkMode ? '#fff' : '#000' }]}>Card Details</Text>
-                <ScrollView>
-                  {selectedCard && (
-                    <View>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Type: {selectedCard.type}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Name: {selectedCard.firstName} {selectedCard.lastName}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Phone: {selectedCard.phone}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Work Number: {selectedCard.workNumber}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Work Email: {selectedCard.workEmail}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>School Email: {selectedCard.schoolEmail}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Personal Email: {selectedCard.personalEmail}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Location: {selectedCard.location}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>School: {selectedCard.school}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Major: {selectedCard.major}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Additional Info: {selectedCard.additionalInfo}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Instagram: {selectedCard.instagram}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Twitter: {selectedCard.twitter}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Facebook: {selectedCard.facebook}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>TikTok: {selectedCard.tiktok}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Snapchat: {selectedCard.snapchat}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Birthday: {selectedCard.birthday}</Text>
-                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Additional URLs: {selectedCard.additionalUrls?.join(', ')}</Text>
-                    </View>
-                  )}
-                  <TouchableOpacity style={styles.cancelButton} onPress={() => setDetailsModalVisible(false)}>
-                    <Text style={styles.cancelButtonText}>Close</Text>
-                  </TouchableOpacity>
-                </ScrollView>
               </View>
             </Modal>
           </>
