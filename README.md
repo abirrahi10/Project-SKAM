@@ -12,6 +12,8 @@ Karim Elshabassy - KarimE146
 Michael Brusilo - MDBTheGreat
 Shayaan Mohammed - Shayaan2972
 
+## Get it Running!
+
 1. Clone application
 
    ```bash
