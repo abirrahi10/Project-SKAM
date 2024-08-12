@@ -7,10 +7,10 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 SKAM is an application (currently only in iOS) that makes connecting the world with a single tap easier! If you've ever gotten tired of sending your friend your Instagram name, your Facebook name, their phone number, and more, SKAM helps you save time from that hassle. Users on the application will be allowed to create up to three cards: personal, work, and student cards for all aspects of their lives. Each card contains different information so you're not oversharing based on your environment! With a single search or tap of the virtual card, you can share whichever card you want with anyone who uses SKAM!
 
 ## Owners
-Abir Rahi - abirrahi10 < br / >
-Karim Elshabassy - KarimE146 < br / >
-Michael Brusilo - MDBTheGreat < br / >
-Shayaan Mohammed - Shayaan2972 < br / >
+Abir Rahi - abirrahi10 <br/>
+Karim Elshabassy - KarimE146 <br/>
+Michael Brusilo - MDBTheGreat <br/>
+Shayaan Mohammed - Shayaan2972 <br/>
 
 ## Get it Running!
 
