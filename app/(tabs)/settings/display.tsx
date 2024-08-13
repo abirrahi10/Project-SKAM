@@ -25,6 +25,7 @@ const gradients = [
 ];
 
 const cardColors = gradients.map((gradient, index) => ({
+  styles:{ color: '#fff' },
   label: `Gradient ${index + 1}`,
   value: `item${index + 1}`,
   gradient: gradient,
@@ -45,7 +46,7 @@ const DropdownComponent = () => {
       colors={item.gradient}
       start={{ x: 0, y: 0.5 }}
       end={{ x: 1, y: 0.5 }}
-      style={[styles.item, { backgroundColor: 'grey' }]}
+      style={[styles.item]}
     >
       <Text style={[styles.itemText, { color: '#000' }]}>
         {item.label}
@@ -55,27 +56,28 @@ const DropdownComponent = () => {
 
   return (
     <Dropdown
-    style={[styles.dropdown]}
-    containerStyle={{ backgroundColor: isDarkMode ? '#000' : '#fff' }} // Set background color for the dropdown container
-    placeholderStyle={[styles.placeholderStyle, { color: '#000', fontSize: 20 }]}
-    selectedTextStyle={[styles.selectedTextStyle, { color: isDarkMode ? '#fff' : '#000' }]}
-    inputSearchStyle={[styles.inputSearchStyle, { color: isDarkMode ? '#fff' : '#000' }]}
-    iconStyle={styles.iconStyle}
-    data={cardColors}
-    maxHeight={300}
-    labelField="label"
-    valueField="value"
-    placeholder="Change Card Background"
-    searchPlaceholder="Search..."
-    value={value}
-    onChange={item => handleColorChange(item)}
-    renderRightIcon={() => (
-      <AntDesign style={[styles.icon, { color: '#000' }]} name="down" size={20} />
-    )}
-    renderItem={renderItem}
-  />
-);
+      style={[styles.dropdown]}
+      containerStyle={{ backgroundColor: isDarkMode ? '#000' : '#fff' }} 
+      placeholderStyle={[styles.placeholderStyle, { color: '#000', fontSize: 20 }]}
+      selectedTextStyle={[styles.selectedTextStyle, { color: '#000' }]}
+      inputSearchStyle={[styles.inputSearchStyle, { color: isDarkMode ? '#fff' : '#000' }]}
+      iconStyle={styles.iconStyle}
+      data={cardColors}
+      maxHeight={300}
+      labelField="label"
+      valueField="value"
+      placeholder="Change Card Background"
+      searchPlaceholder="Search..."
+      value={value}
+      onChange={item => handleColorChange(item)}
+      renderRightIcon={() => (
+        <AntDesign style={[styles.icon, { color: '#000' }]} name="down" size={20} />
+      )}
+      renderItem={renderItem}
+    />
+  );
 };
+
 
 const DisplayPage = () => {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
