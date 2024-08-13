@@ -38,14 +38,14 @@ const HowToPage = () => {
     { key: '5', text: 'To edit, press the pen and paper icon on the top right.' },
     { key: '6', text: 'Choose the card you would like to edit.' },
     { key: '7', text: 'Once you are done with your changes, press save to finalize the edit and see the new card.' },
+    { key: '8', text: 'If you choose you could also delete a card by swiping left and pressing on the icon on the right,'}
+
   ];
 
   const addCard: Instruction[] = [
-    { key: '1', text: 'To add via tap is easy, just choose the card you would like to share and ask your new friend to choose one too.' },
-    { key: '2', text: 'Just tap your phones and check your wallet for the new card.' },
-    { key: '3', text: 'To add via search, go to the wallet tab.' },
-    { key: '4', text: 'Click the + to add someone else\'s card.' },
-    { key: '5', text: 'Enter their phone number and check the wallet for the new card.' },
+    { key: '1', text: 'To add via search, go to the wallet tab.' },
+    { key: '2', text: 'Click the + to add someone else\'s card.' },
+    { key: '3', text: 'Enter their phone number and check the wallet for the new card.' },
   ];
 
   const renderItem = (item: Instruction) => (
