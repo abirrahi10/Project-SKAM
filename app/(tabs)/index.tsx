@@ -319,9 +319,9 @@ export default function HomeScreen() {
       if (name === 'additionalUrls' && Array.isArray(value)) {
         setSelectedCard({ ...selectedCard, [name]: value });
       } else if (name === 'phone' || name === 'workNumber') {
-        // Format the phone number
-        const formattedValue = (value as string);
-        setSelectedCard({ ...selectedCard, [name]: formattedValue });
+        // Limit to 10 digits
+        const numericValue = (value as string).replace(/\D/g, '').slice(0, 10);
+        setSelectedCard({ ...selectedCard, [name]: numericValue });
       } else {
         setSelectedCard({ ...selectedCard, [name]: value });
       }
@@ -385,10 +385,10 @@ export default function HomeScreen() {
               style={[styles.input, { color: isDarkMode ? '#fff' : '#000', borderColor: isDarkMode ? '#555' : '#ccc', backgroundColor: isDarkMode ? '#333' : '#fff' }]}
               placeholder="Work Phone Number"
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
-              value={selectedCard.phone}
+              value={selectedCard.workNumber}
               onChangeText={(value) => handleChange('workNumber', value)}
               keyboardType="numeric"
-              maxLength={14} // (xxx) xxx-xxxx is 14 characters
+              maxLength={10}
             />
             {isRequired('workEmail') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
@@ -460,7 +460,7 @@ export default function HomeScreen() {
               value={selectedCard.phone}
               onChangeText={(value) => handleChange('phone', value)}
               keyboardType="numeric"
-              maxLength={14} // (xxx) xxx-xxxx is 14 characters
+              maxLength={10}
             />
             {isRequired('schoolEmail') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
@@ -561,7 +561,7 @@ export default function HomeScreen() {
               value={selectedCard.phone}
               onChangeText={(value) => handleChange('phone', value)}
               keyboardType="numeric"
-              maxLength={14} // (xxx) xxx-xxxx is 14 characters
+              maxLength={10}
             />
             {isRequired('personalEmail') && <Text style={styles.requiredAsterisk}>*Required Field</Text>}
             <TextInput
@@ -803,62 +803,110 @@ export default function HomeScreen() {
             </Modal>
   
             <Modal
-            animationType="slide"
-            transparent={false}
-            visible={detailsModalVisible}
-            onRequestClose={() => setDetailsModalVisible(false)}>
-            <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
-              <Text style={[styles.modalTitle, { color: isDarkMode ? '#fff' : '#000' }]}>Card Details</Text>
-              <ScrollView>
-                {selectedCard && (
-                  <View>
-                    <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Card Type: {selectedCard.type}</Text>
-                    <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Name: {selectedCard.firstName} {selectedCard.lastName}</Text>
-                    
-                    {selectedCard.type === 'Personal' && (
-                      <>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Phone: {selectedCard.phone}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Personal Email: {selectedCard.personalEmail}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Location: {selectedCard.location}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Instagram: {selectedCard.instagram}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Twitter: {selectedCard.twitter}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Facebook: {selectedCard.facebook}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>TikTok: {selectedCard.tiktok}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Snapchat: {selectedCard.snapchat}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Birthday: {selectedCard.birthday}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Additional Info: {selectedCard.additionalInfo}</Text>
-                      </>
-                    )}
+              animationType="slide"
+              transparent={false}
+              visible={detailsModalVisible}
+              onRequestClose={() => setDetailsModalVisible(false)}>
+              <View style={[styles.modalContainer, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
+                <Text style={[styles.modalTitle, { color: isDarkMode ? '#fff' : '#000' }]}>Card Details</Text>
+                <ScrollView>
+                  {selectedCard && (
+                    <View>
+                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                        <Text style={styles.boldLabel}>Card Type: </Text>{selectedCard.type}
+                      </Text>
+                      <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                        <Text style={styles.boldLabel}>Name: </Text>{selectedCard.firstName} {selectedCard.lastName}
+                      </Text>
+                      
+                      {selectedCard.type === 'Personal' && (
+                        <>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Phone: </Text>{selectedCard.phone}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Personal Email: </Text>{selectedCard.personalEmail}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Location: </Text>{selectedCard.location}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Instagram: </Text>{selectedCard.instagram}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Twitter: </Text>{selectedCard.twitter}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Facebook: </Text>{selectedCard.facebook}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>TikTok: </Text>{selectedCard.tiktok}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Snapchat: </Text>{selectedCard.snapchat}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Birthday: </Text>{selectedCard.birthday}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Additional Info: </Text>{selectedCard.additionalInfo}
+                          </Text>
+                        </>
+                      )}
 
-                    {selectedCard.type === 'Work' && (
-                      <>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Work Number: {selectedCard.workNumber}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Work Email: {selectedCard.workEmail}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Location: {selectedCard.location}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>LinkedIn: {selectedCard.linkedin}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Additional URLs: {selectedCard.additionalUrls?.join(', ')}</Text>
-                      </>
-                    )}
+                      {selectedCard.type === 'Work' && (
+                        <>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Work Number: </Text>{selectedCard.workNumber}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Work Email: </Text>{selectedCard.workEmail}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Location: </Text>{selectedCard.location}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>LinkedIn: </Text>{selectedCard.linkedin}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Additional URLs: </Text>{selectedCard.additionalUrls?.join(', ')}
+                          </Text>
+                        </>
+                      )}
 
-                    {selectedCard.type === 'Student' && (
-                      <>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Phone: {selectedCard.phone}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>School Email: {selectedCard.schoolEmail}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>School Location: {selectedCard.location}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>LinkedIn: {selectedCard.linkedin}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>School / University: {selectedCard.school}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Major: {selectedCard.major}</Text>
-                        <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>Additional Info: {selectedCard.additionalInfo}</Text>
-                      </>
-                    )}
-                  </View>
-                )}
-                <TouchableOpacity style={styles.cancelButton} onPress={() => setDetailsModalVisible(false)}>
-                  <Text style={styles.cancelButtonText}>Close</Text>
-                </TouchableOpacity>
-              </ScrollView>
-            </View>
-          </Modal>
+                      {selectedCard.type === 'Student' && (
+                        <>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Phone: </Text>{selectedCard.phone}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>School Email: </Text>{selectedCard.schoolEmail}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>School Location: </Text>{selectedCard.location}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>LinkedIn: </Text>{selectedCard.linkedin}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>School / University: </Text>{selectedCard.school}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Major: </Text>{selectedCard.major}
+                          </Text>
+                          <Text style={[styles.detailText, { color: isDarkMode ? '#fff' : '#000' }]}>
+                            <Text style={styles.boldLabel}>Additional Info: </Text>{selectedCard.additionalInfo}
+                          </Text>
+                        </>
+                      )}
+                    </View>
+                  )}
+                  <TouchableOpacity style={styles.cancelButton} onPress={() => setDetailsModalVisible(false)}>
+                    <Text style={styles.cancelButtonText}>Close</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+            </Modal>
   
             <Modal
               animationType="slide"
@@ -1104,5 +1152,10 @@ const styles = StyleSheet.create({
   requiredAsterisk: {
     color: 'red',
     marginLeft: 5,
+  },
+  boldLabel: {
+    fontFamily: 'Sans-serif',
+    fontWeight: 'bold',
+    fontSize: 17,
   },
 });
