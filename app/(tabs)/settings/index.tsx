@@ -60,8 +60,8 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({ children }) => {
           style: 'cancel',
         },
         {
-          text: 'OK',
-          onPress: () => handleLogout(), // Call handleLogout function here
+          text: 'Yes',
+          onPress: () => handleLogout(), 
         },
       ]
     );
@@ -150,11 +150,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   button: {
-    backgroundColor: '#f8f9fa',
-    borderWidth: 1,
-    borderColor: '#f8f9fa',
-    borderRadius: 4,
-    padding: 10,
+    backgroundColor: '#dddddd',
+    borderRadius: 5,
+    padding: 20,
     minWidth: 54,
     alignItems: 'center',
     marginBottom: 10,
@@ -162,10 +160,10 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#3c4043',
     fontFamily: 'Arial',
-    fontSize: 14,
+    fontSize: 16,
   },
   loginButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#007bff',
     borderRadius: 4,
     padding: 8,
     minWidth: 54,

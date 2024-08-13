@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { Stack } from 'expo-router';
 import { View, Text, Switch, StyleSheet } from 'react-native';
 import { useDarkMode } from '../../DarkModeContext';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -24,7 +25,7 @@ const gradients = [
 ];
 
 const cardColors = gradients.map((gradient, index) => ({
-  label: `Color ${index + 1}`,
+  label: `Gradient ${index + 1}`,
   value: `item${index + 1}`,
   gradient: gradient,
 }));
@@ -42,11 +43,11 @@ const DropdownComponent = () => {
   const renderItem = (item: { label: string; value: string; gradient: string[] }) => (
     <LinearGradient
       colors={item.gradient}
-      start={[0, 0]}
-      end={[1, 0]}
-      style={styles.item}
+      start={{ x: 0, y: 0.5 }}
+      end={{ x: 1, y: 0.5 }}
+      style={[styles.item, { backgroundColor: 'grey' }]}
     >
-      <Text style={[styles.itemText, { color: isDarkMode ? '#fff' : '#000' }]}>
+      <Text style={[styles.itemText, { color: '#000' }]}>
         {item.label}
       </Text>
     </LinearGradient>
@@ -54,25 +55,26 @@ const DropdownComponent = () => {
 
   return (
     <Dropdown
-      style={[styles.dropdown, { backgroundColor: 'grey' }]}
-      placeholderStyle={[styles.placeholderStyle, { color: isDarkMode ? '#fff' : '#000', fontSize: 20 }]}
-      selectedTextStyle={[styles.selectedTextStyle, { color: isDarkMode ? '#fff' : '#000' }]}
-      inputSearchStyle={[styles.inputSearchStyle, { color: isDarkMode ? '#fff' : '#000' }]}
-      iconStyle={styles.iconStyle}
-      data={cardColors}
-      maxHeight={300}
-      labelField="label"
-      valueField="value"
-      placeholder="Change color"
-      searchPlaceholder="Search..."
-      value={value}
-      onChange={item => handleColorChange(item)}
-      renderRightIcon={() => (
-        <AntDesign style={[styles.icon, { color: isDarkMode ? '#fff' : '#000' }]} name="down" size={20} />
-      )}
-      renderItem={renderItem}
-    />
-  );
+    style={[styles.dropdown]}
+    containerStyle={{ backgroundColor: isDarkMode ? '#000' : '#fff' }} // Set background color for the dropdown container
+    placeholderStyle={[styles.placeholderStyle, { color: '#000', fontSize: 20 }]}
+    selectedTextStyle={[styles.selectedTextStyle, { color: isDarkMode ? '#fff' : '#000' }]}
+    inputSearchStyle={[styles.inputSearchStyle, { color: isDarkMode ? '#fff' : '#000' }]}
+    iconStyle={styles.iconStyle}
+    data={cardColors}
+    maxHeight={300}
+    labelField="label"
+    valueField="value"
+    placeholder="Change Card Background"
+    searchPlaceholder="Search..."
+    value={value}
+    onChange={item => handleColorChange(item)}
+    renderRightIcon={() => (
+      <AntDesign style={[styles.icon, { color: '#000' }]} name="down" size={20} />
+    )}
+    renderItem={renderItem}
+  />
+);
 };
 
 const DisplayPage = () => {
@@ -81,13 +83,14 @@ const DisplayPage = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
+      <Stack.Screen options={{ headerTitle: 'Display' }} />
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
 
       <View style={styles.switchContainer}>
-        <Text style={[styles.switchName, { color: isDarkMode ? '#fff' : '#000' }]}>Dark mode</Text>
+        <Text style={[styles.switchName, { color: '#000' }]}>Toggle Dark Mode</Text>
         <Switch
-          trackColor={{ false: '#81b0ff', true: '#767577' }}
-          thumbColor={isDarkMode ? '#f4f3f4' : '#f5dd4b'}
+          trackColor={{ false: '#81b0ff', true: 'green' }}
+          thumbColor={'#f4f3f4'}
           ios_backgroundColor="#3e3e3e"
           onValueChange={toggleDarkMode}
           value={isDarkMode}
@@ -108,10 +111,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'grey',
+    backgroundColor: '#dddddd',
     height: 50,
     paddingHorizontal: 20,
-    borderRadius: 25,
+    borderRadius: 10,
     marginHorizontal: 20,
     marginVertical: 10,
   },
@@ -120,16 +123,15 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   dropdown: {
+    backgroundColor:"#dddddd",
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     height: 50,
     paddingHorizontal: 20,
-    borderRadius: 25,
+    borderRadius: 10,
     marginHorizontal: 20,
     marginVertical: 10,
-    borderBottomColor: 'gray',
-    borderBottomWidth: 0.5,
   },
   icon: {
     marginRight: 5,
@@ -149,12 +151,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   item: {
-    padding: 10,
+    padding: 20, 
+    height: 80,  
     borderRadius: 5,
     marginVertical: 5,
+    backgroundColor: 'black',
   },
   itemText: {
-    fontSize: 16,
+    fontSize: 20,
   },
 });
 

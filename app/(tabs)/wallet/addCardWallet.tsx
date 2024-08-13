@@ -1,11 +1,16 @@
 //addCardWallet.tsx
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { useColorScheme, View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { db, auth } from '../../../firebaseConfig';
 import { doc, setDoc, getDoc, collection, query, where, getDocs} from 'firebase/firestore';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationOptions } from '@react-navigation/stack';
+import { Ionicons } from '@expo/vector-icons';
+import { useColors} from '../../ColorConfig';
+import {LinearGradient} from 'expo-linear-gradient';
+
+
 
 
 interface CardData {
@@ -22,8 +27,11 @@ const AddCardScreen: React.FC = () => {
   const [searchResults, setSearchResults] = useState<CardData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
   const navigation = useNavigation();
+  const { colors } = useColors();
+
 
   useFocusEffect(() => {
 navigation.setOptions({
@@ -104,9 +112,9 @@ navigation.setOptions({
     }
   };
 
+
   const renderCard = ({ item }: {item: CardData}) => (
     <TouchableOpacity
-      style={styles.card}
       onPress={() => {
         Alert.alert(
           'Add Card',
@@ -118,16 +126,23 @@ navigation.setOptions({
         );
       }}
     >
-      <Text>Name: {item.firstName} {item.lastName}</Text>
-      <Text>Type: {item.type}</Text>
-      <Text>Phone: {item.phone}</Text>
+      <LinearGradient
+          colors={colors}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.card}
+        >
+        <Text style={[styles.cardText]}>Name: {item.firstName} {item.lastName}</Text>
+        <Text style={[styles.cardText]}>Phone: {item.phone}</Text>
+        <Text style={[styles.cardText]}>Type: {item.type}</Text>
+      </LinearGradient>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
       <TextInput
-        style={styles.searchInput}
+        style={[styles.searchInput, { color: isDarkMode ? '#fff' : '#000' }]}
         placeholder="Enter phone number"
         placeholderTextColor="gray"
         value={searchQuery}
@@ -161,7 +176,9 @@ navigation.setOptions({
 const styles = StyleSheet.create({
   buttonText:{
     color: 'white',
-    fontWeight: 'bold',
+  },
+  searchIcon: {
+    marginRight: 10,
   },
   container: {
     flex: 1,
@@ -173,13 +190,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 10,
-    color: 'gray',
+    borderRadius: 10,
   },
   searchButton: {
-    backgroundColor: 'blue',
+    backgroundColor: '#007bff',
     padding: 10,
     alignItems: 'center',
     marginBottom: 20,
+    borderRadius: 10,
   },
   card: {
     backgroundColor: '#f0f0f0',
@@ -193,6 +211,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'gray',
   },
+  cardText: {
+    fontSize: 15,
+    marginTop: 5,
+  }
 });
 
 export default AddCardScreen;

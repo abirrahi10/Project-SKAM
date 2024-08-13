@@ -7,6 +7,8 @@ import { collection, onSnapshot, doc, query, orderBy } from 'firebase/firestore'
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useDarkMode } from '../../DarkModeContext';
+import { useColors } from '@/app/ColorConfig';
 
 interface CardData {
   id: string;
@@ -47,7 +49,10 @@ const DisplayCardsScreen: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const colorScheme = useColorScheme();
   const navigation = useNavigation();
-  const isDarkMode = colorScheme === 'dark';
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { colors } = useColors();
+
+
 
   const handleAddCardPress = () =>{
     // @ts-ignore
@@ -115,7 +120,7 @@ const DisplayCardsScreen: React.FC = () => {
   const renderCard = ({ item }: { item: CardData }) => (
     <TouchableOpacity onPress = {() => toggleCardExpansion(item.id)}>
     <LinearGradient
-      colors={['#cdffd8', '#94b9ff']}
+      colors={colors}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.card}
@@ -152,7 +157,6 @@ const DisplayCardsScreen: React.FC = () => {
     )}
     </LinearGradient>
     </TouchableOpacity>
-
   );
 
   const [expandedCardID, setExpandedCardID] = useState<string | null>(null);
@@ -162,9 +166,9 @@ const DisplayCardsScreen: React.FC = () => {
   };
 
   return (
-    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+    <View style={[styles.container]}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, isDarkMode && styles.darkText]}>Wallet</Text>
+        <Text style={[styles.headerTitle, { color: isDarkMode ? '#fff' : '#000' }]}>Wallet</Text>
       </View>
       
       <View style={styles.searchContainer}>
@@ -249,11 +253,8 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     paddingTop: 50,
-    backgroundColor: '#ffffff',
   },
-  darkContainer: {
-    backgroundColor: '#000000',
-  },
+
   header: {
     marginBottom: 20,
   },
@@ -274,7 +275,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#dddddd',
     borderRadius: 10,
     paddingHorizontal: 10,
   },
@@ -335,8 +336,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   cardText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#000000',
+    marginTop: 5,
   },
   noCardText: {
     fontSize: 18,

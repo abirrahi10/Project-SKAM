@@ -1,41 +1,39 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, useColorScheme } from 'react-native';
-import { getAuth, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from 'firebase/auth';
+import { View, TextInput, Button, Alert, StyleSheet, useColorScheme, TouchableOpacity, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useDarkMode } from '../../DarkModeContext';
+import { getAuth, EmailAuthProvider, reauthenticateWithCredential, updateEmail } from 'firebase/auth';
 
-
-const ChangePasswordPage = () => {
-  const [oldPassword, setOldPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+const ChangeEmailPage = () => {
+  const [password, setPassword] = useState('');
+  const [oldEmail, setOldEmail] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const router = useRouter();
   const colorScheme = useColorScheme();
   const { isDarkMode } = useDarkMode();
 
-
-  const handleChangePassword = async () => {
-    if (newPassword !== confirmPassword) {
-      Alert.alert('Error', 'New password and confirmation do not match.');
-      return;
-    }
-
+  const handleChangeEmail = async () => {
     try {
       const auth = getAuth();
       const user = auth.currentUser;
 
       if (user && user.email) {
-        const credential = EmailAuthProvider.credential(user.email, oldPassword);
+        if (user.email !== oldEmail) {
+          Alert.alert('Error', 'Old email does not match current email.');
+          return;
+        }
+
+        const credential = EmailAuthProvider.credential(user.email, password);
         await reauthenticateWithCredential(user, credential);
-        await updatePassword(user, newPassword);
-        Alert.alert('Success', 'Password has been changed successfully.');
+        await updateEmail(user, newEmail);
+        Alert.alert('Success', 'Email has been changed successfully.');
         router.back();
       } else {
         Alert.alert('Error', 'User not found or email is missing.');
       }
     } catch (error) {
-      console.error('Error changing password:', error);
-      Alert.alert('Error', 'There was a problem changing the password. Please try again.');
+      console.error('Error changing Email:', error);
+      Alert.alert('Error', 'There was a problem changing the email. Please try again.');
     }
   };
 
@@ -43,30 +41,28 @@ const ChangePasswordPage = () => {
     <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>
       <TextInput
         style={[styles.input, { color: isDarkMode ? '#fff' : '#000' }]}
-        placeholder="Old Password"
+        placeholder="Old Email"
         placeholderTextColor={isDarkMode ? '#aaa' : '#666'}
-        secureTextEntry
-        value={oldPassword}
-        onChangeText={setOldPassword}
+        value={oldEmail}
+        onChangeText={setOldEmail}
       />
       <TextInput
         style={[styles.input, { color: isDarkMode ? '#fff' : '#000' }]}
-        placeholder="New Password"
+        placeholder="Password"
         placeholderTextColor={isDarkMode ? '#aaa' : '#666'}
         secureTextEntry
-        value={newPassword}
-        onChangeText={setNewPassword}
+        value={password}
+        onChangeText={setPassword}
       />
       <TextInput
         style={[styles.input, { color: isDarkMode ? '#fff' : '#000' }]}
-        placeholder="Confirm New Password"
+        placeholder="New Email"
         placeholderTextColor={isDarkMode ? '#aaa' : '#666'}
-        secureTextEntry
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
+        value={newEmail}
+        onChangeText={setNewEmail}
       />
-      <TouchableOpacity style={styles.button} onPress={handleChangePassword}>
-        <Text style={styles.buttonText}>Change Password</Text>
+      <TouchableOpacity style={styles.button} onPress={handleChangeEmail}>
+        <Text style={styles.buttonText}>Change Email</Text>
       </TouchableOpacity>
     </View>
   );
@@ -100,4 +96,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChangePasswordPage;
+export default ChangeEmailPage;
