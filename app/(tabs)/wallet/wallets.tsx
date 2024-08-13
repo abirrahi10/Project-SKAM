@@ -1,3 +1,5 @@
+//Wallets.tsx
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, useColorScheme, TextInput, TouchableOpacity, FlatList } from 'react-native';
 import { db, auth } from '../../../firebaseConfig';
@@ -116,17 +118,52 @@ const DisplayCardsScreen: React.FC = () => {
   }, [searchQuery, cards, filterBy]);
 
   const renderCard = ({ item }: { item: CardData }) => (
+    <TouchableOpacity onPress = {() => toggleCardExpansion(item.id)}>
     <LinearGradient
       colors={colors}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.card}
     >
-      <Text style={[styles.cardText]}>First Name: {item.firstName}</Text>
-      <Text style={[styles.cardText]}>Last Name: {item.lastName}</Text>
-      <Text style={[styles.cardText]}>Type: {item.type}</Text>
+      <Text style={[styles.cardText, isDarkMode && styles.darkText]}>First Name: {item.firstName}</Text>
+      <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Last Name: {item.lastName}</Text>
+      <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Type: {item.type}</Text>
+    
+
+    {expandedCardID === item.id && (
+      <View style={styles.expandedCardDetails}>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Work Number: {item.workNumber}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Work Email: {item.workEmail}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>School Email: {item.schoolEmail}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Personal Email: {item.personalEmail}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Location: {item.location}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Linkedin: {item.linkedin}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>School: {item.school}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Major: {item.major}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Discord: {item.discord}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Instagram: {item.instagram}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Twitter: {item.twitter}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Facebook: {item.facebook}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Tiktok: {item.tiktok}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Snapchat: {item.snapchat}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Birthday: {item.birthday}</Text>
+        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Additional Information: {item.additionalInfo}</Text>
+        {item.additionalUrls && (
+          <Text style={[styles.cardText, isDarkMode&& styles.darkText]}>
+            Additional URLs: {item.additionalUrls.join(',')}
+          </Text>
+        )}
+      </View>
+    )}
     </LinearGradient>
+    </TouchableOpacity>
   );
+
+  const [expandedCardID, setExpandedCardID] = useState<string | null>(null);
+
+  const toggleCardExpansion = (cardId: string) => {
+    setExpandedCardID (prevID => prevID === cardId ? null: cardId);
+  };
 
   return (
     <View style={[styles.container]}>
@@ -307,6 +344,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     marginTop: 20,
+  },
+  expandedCardDetails:{
+    marginTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+    paddingTop: 10,
   },
 });
 
