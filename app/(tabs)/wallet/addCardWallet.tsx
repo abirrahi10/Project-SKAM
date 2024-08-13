@@ -1,7 +1,9 @@
+//addCardWallet.tsx
+
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { db, auth } from '../../../firebaseConfig';
-import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, where, getDocs} from 'firebase/firestore';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationOptions } from '@react-navigation/stack';
 
@@ -39,7 +41,6 @@ navigation.setOptions({
     }
 
     setIsLoading(true);
-    setHasSearched(true);
     try{
     const q = query(collection(db, 'cards'), where('phone', '==', searchQuery));
     const querySnapshot = await getDocs(q);
@@ -59,7 +60,7 @@ navigation.setOptions({
   }
   };
 
-  const addCardToWallet = async (card: CardData) => {
+  const addCardToWallet = async (cardId: string) => {
     const user = auth.currentUser;
     if (!user) {
       Alert.alert('Error', 'No user logged in');
@@ -68,28 +69,30 @@ navigation.setOptions({
 
     setIsLoading(true);
     try {
+      const originalCardRef = doc(db, 'cards', cardId);
+      const originalCardSnap =await getDoc(originalCardRef);
+
+      if(!originalCardSnap.exists()){
+        Alert.alert('Error', 'Card not found');
+        return;
+      }
+
+      const originalCardData = originalCardSnap.data();
+
       const userWalletRef = doc(db, 'wallets', user.uid);
       const cardsRef = collection(userWalletRef, 'cards');
 
-      const duplicateCheckQuery = query(cardsRef, where('phone', '==', card.phone));
+      const duplicateCheckQuery = query(cardsRef, where('phone', '==', originalCardData.phone));
       const duplicateCheckSnapshot = await getDocs(duplicateCheckQuery);
 
       if(!duplicateCheckSnapshot.empty){
-        Alert.alert('Duplicate', `You have already swapped cards with this user`);
+        Alert.alert('Duplicate', 'You have already swapped cards with this user');
         setIsLoading(false);
         return;
       }
-      
-      const cardData = {
-        firstName: card.firstName || 'Unknown',
-        lastName: card.lastName || 'Unknown',
-        born: card.born || 0,
-        type: card.type || 'unknown',
-        phone: card.phone || 'N/A',
-      };
 
+      await setDoc(doc(cardsRef, cardId), originalCardData);
       
-      await setDoc(doc(cardsRef), cardData);
       Alert.alert('Success', 'Card added to your wallet', [
      { text: 'OK', onPress: () => navigation.goBack() }
       ]);
@@ -101,7 +104,7 @@ navigation.setOptions({
     }
   };
 
-  const renderCard = ({ item }: { item: CardData }) => (
+  const renderCard = ({ item }: {item: CardData}) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() => {
@@ -110,13 +113,12 @@ navigation.setOptions({
           `Do you want to add ${item.firstName} ${item.lastName} to your wallet?`,
           [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Yes', onPress: () => addCardToWallet(item) },
+            { text: 'Yes', onPress: () => addCardToWallet(item.id) },
           ]
         );
       }}
     >
       <Text>Name: {item.firstName} {item.lastName}</Text>
-      <Text>Born: {item.born}</Text>
       <Text>Type: {item.type}</Text>
       <Text>Phone: {item.phone}</Text>
     </TouchableOpacity>
@@ -132,7 +134,8 @@ navigation.setOptions({
         onChangeText={setSearchQuery}
         keyboardType="phone-pad"
       />
-      <TouchableOpacity style={styles.searchButton} 
+      <TouchableOpacity 
+      style={styles.searchButton} 
       onPress={searchCards} 
       disabled = {isLoading}
       >
@@ -146,7 +149,7 @@ navigation.setOptions({
         keyExtractor={(item) => item.id}
         ListEmptyComponent={
           hasSearched ? (
-        <Text style = {styles.emptyText}> No cards found. Try a different phone number.</Text>
+        <Text style = {styles.emptyText}>No cards found. Try a different phone number.</Text>
           ) : null
         }
       />
