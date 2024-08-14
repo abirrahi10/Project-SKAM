@@ -19,7 +19,7 @@ const AboutPage = () => {
       </Text>
       <Text style={[styles.heading, { color: isDarkMode ? '#fff' : '#000' }]}>Searching</Text>
       <Text style={[styles.text, { color: isDarkMode ? '#fff' : '#000' }]}>
-        Once fully implemented, this feature will allow you to search someone via phone number. Even though we have the tap feature which would seem like a quicker alternative, this is for those quick situations when neither party has time to open the app and whatnot, so they just exchange numbers and go on to add each other later on.
+        Once fully implemented, this feature will allow you to search someone via phone number. This is for those quick situations when neither people have time to open social media app and whatnot, so they just exchange numbers and go on to add each other later on.
       </Text>
     </ScrollView>
   );
