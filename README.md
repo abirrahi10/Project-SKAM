@@ -38,4 +38,4 @@ In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/) IF YOU ARE USING THIS ON MAC, PLEASE MAKE SURE YOU HAVE XCODE UPDATED, AND MACOS VERSION UPDATED
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo. THIS WILL WORK REGARDLESS OF COMPUTER DEVICE. 
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo. Download the app on your iPhone! THIS WILL WORK REGARDLESS OF COMPUTER DEVICE. 
