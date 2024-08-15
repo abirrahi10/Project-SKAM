@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useColorScheme, View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { db, auth } from '../../../firebaseConfig';
-import { doc, setDoc, getDoc, collection, query, where, getDocs} from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, where, getDocs, or} from 'firebase/firestore';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationOptions } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,17 +14,18 @@ import {LinearGradient} from 'expo-linear-gradient';
 
 
 interface CardData {
-  id: string;
+  //id: string;
   firstName: string;
   lastName: string;
   born: number;
   type: 'student' | 'work' | 'personal';
   phone: string;
+  workNumber?: string;
 }
 
 const AddCardScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<CardData[]>([]);
+  const [searchResults, setSearchResults] = useState<(CardData & {docId: string})[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const colorScheme = useColorScheme();
@@ -44,22 +45,30 @@ navigation.setOptions({
 
   const searchCards = async () => {
     if(!searchQuery.trim()){
-      Alert.alert('Error', 'Please enter a phone number');
+      Alert.alert('Error', 'Please enter a phone number or work number');
       return;
     }
 
     setIsLoading(true);
     try{
-    const q = query(collection(db, 'cards'), where('phone', '==', searchQuery));
+    const q = query(
+      collection(db, 'cards'),
+      or (
+        where('phone', '==', searchQuery),
+        where('workNumber', '==', searchQuery)
+        )
+      );
     const querySnapshot = await getDocs(q);
-    const results: CardData[] = [];
+    const results: (CardData & {docId: string})[] = [];
     querySnapshot.forEach((doc) => {
-      results.push({id: doc.id, ...doc.data() as Omit<CardData, 'id'> });
+      //const cardData = doc.data() as Omit<CardData, 'id'>;
+      results.push({docId: doc.id, ...doc.data() as CardData});
     });
     setSearchResults(results);
     // if (results.length > 0){
     // addCardToWallet(results[0]);
     // }
+    setHasSearched(true);
   } catch(error){
     console.error('Error searching cards:', error);
     Alert.alert('Error', 'Failed to search for cards');
@@ -68,7 +77,7 @@ navigation.setOptions({
   }
   };
 
-  const addCardToWallet = async (cardId: string) => {
+  const addCardToWallet = async (cardDocId: string) => {
     const user = auth.currentUser;
     if (!user) {
       Alert.alert('Error', 'No user logged in');
@@ -77,29 +86,54 @@ navigation.setOptions({
 
     setIsLoading(true);
     try {
-      const originalCardRef = doc(db, 'cards', cardId);
-      const originalCardSnap =await getDoc(originalCardRef);
+      const cardsCollectionRef = collection(db, 'cards');
+      const originalCardRef = doc(cardsCollectionRef, cardDocId);
+      const originalCardSnap = await getDoc(originalCardRef);
 
       if(!originalCardSnap.exists()){
         Alert.alert('Error', 'Card not found');
+        setIsLoading(false);
         return;
       }
 
-      const originalCardData = originalCardSnap.data();
+      const originalCardData = originalCardSnap.data() as CardData;
 
       const userWalletRef = doc(db, 'wallets', user.uid);
       const cardsRef = collection(userWalletRef, 'cards');
 
-      const duplicateCheckQuery = query(cardsRef, where('phone', '==', originalCardData.phone));
+      const duplicateCheckQuery = query(
+        cardsRef,
+          where('phone', '==', originalCardData.phone),
+          where ('type', '==', originalCardData.type)
+    );
       const duplicateCheckSnapshot = await getDocs(duplicateCheckQuery);
 
-      if(!duplicateCheckSnapshot.empty){
+      let isDuplicate = false;
+
+      const phoneCheck = originalCardData.phone || '';
+      const workNumberCheck = originalCardData.workNumber || '';
+
+      duplicateCheckSnapshot.forEach((doc)=>{
+      const data = doc.data();
+      if(
+        (data.phone === phoneCheck && data.workNumber === workNumberCheck) &&
+        data.type === originalCardData.type
+      ){
+        isDuplicate = true;
+      }
+    });
+
+      if(isDuplicate){
         Alert.alert('Duplicate', 'You have already swapped cards with this user');
         setIsLoading(false);
         return;
       }
 
-      await setDoc(doc(cardsRef, cardId), originalCardData);
+      const newCardRef = doc(cardsRef);
+      await setDoc(newCardRef, {
+        ...originalCardData,
+        originalCardId: cardDocId 
+      });
       
       Alert.alert('Success', 'Card added to your wallet', [
      { text: 'OK', onPress: () => navigation.goBack() }
@@ -113,7 +147,7 @@ navigation.setOptions({
   };
 
 
-  const renderCard = ({ item }: {item: CardData}) => (
+  const renderCard = ({ item }: {item: CardData & {docId: string}}) => (
     <TouchableOpacity
       onPress={() => {
         Alert.alert(
@@ -121,7 +155,7 @@ navigation.setOptions({
           `Do you want to add ${item.firstName} ${item.lastName} to your wallet?`,
           [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Yes', onPress: () => addCardToWallet(item.id) },
+            { text: 'Yes', onPress: () => addCardToWallet(item.docId) },
           ]
         );
       }}
@@ -133,7 +167,7 @@ navigation.setOptions({
           style={styles.card}
         >
         <Text style={[styles.cardText]}>Name: {item.firstName} {item.lastName}</Text>
-        <Text style={[styles.cardText]}>Phone: {item.phone}</Text>
+        <Text style={[styles.cardText]}>Phone: {item.type === 'work' && item.workNumber ? item.workNumber : item.phone}</Text>
         <Text style={[styles.cardText]}>Type: {item.type}</Text>
       </LinearGradient>
     </TouchableOpacity>
@@ -161,7 +195,7 @@ navigation.setOptions({
       <FlatList
         data={searchResults}
         renderItem={renderCard}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.docId}
         ListEmptyComponent={
           hasSearched ? (
         <Text style = {styles.emptyText}>No cards found. Try a different phone number.</Text>
