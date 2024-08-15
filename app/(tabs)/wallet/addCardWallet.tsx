@@ -9,8 +9,7 @@ import { StackNavigationOptions } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors} from '../../ColorConfig';
 import {LinearGradient} from 'expo-linear-gradient';
-
-
+import  MaskInput, {createNumberMask} from 'react-native-mask-input';
 
 
 interface CardData {
@@ -32,6 +31,7 @@ const AddCardScreen: React.FC = () => {
   const isDarkMode = colorScheme === 'dark';
   const navigation = useNavigation();
   const { colors } = useColors();
+  const [phoneNumber, setPhoneNumber] = useState('');
 
 
   useFocusEffect(() => {
@@ -42,9 +42,12 @@ navigation.setOptions({
    } as StackNavigationOptions);
   });
 
+  const handlePhoneNumber = (formatted: string, extracted: string) => {
+    setPhoneNumber(extracted);
+  };
 
   const searchCards = async () => {
-    if(!searchQuery.trim()){
+    if(!phoneNumber.trim()){
       Alert.alert('Error', 'Please enter a phone number or work number');
       return;
     }
@@ -54,8 +57,8 @@ navigation.setOptions({
     const q = query(
       collection(db, 'cards'),
       or (
-        where('phone', '==', searchQuery),
-        where('workNumber', '==', searchQuery)
+        where('phone', '==', phoneNumber),
+        where('workNumber', '==', phoneNumber)
         )
       );
     const querySnapshot = await getDocs(q);
@@ -175,13 +178,15 @@ navigation.setOptions({
 
   return (
     <View style={styles.container}>
-      <TextInput
+      <MaskInput
         style={[styles.searchInput, { color: isDarkMode ? '#fff' : '#000' }]}
-        placeholder="Enter phone number"
+        mask = {['(', /\d/,/\d/, /\d/, ')',' ', /\d/, /\d/, /\d/, '-', /\d/, /\d/,/\d/, /\d/]}
+        placeholder = {phoneNumber ? "(   ) -   -    " : "Enter phone number"}
+        onChangeText= {handlePhoneNumber}
         placeholderTextColor="gray"
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        keyboardType="phone-pad"
+        value={phoneNumber}
+        keyboardType="numeric"
+        
       />
       <TouchableOpacity 
       style={styles.searchButton} 

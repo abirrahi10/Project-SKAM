@@ -1,14 +1,15 @@
 //Wallets.tsx
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, useColorScheme, TextInput, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, useColorScheme, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { db, auth } from '../../../firebaseConfig';
-import { collection, onSnapshot, doc, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, doc, query, orderBy, deleteDoc, where, getDocs } from 'firebase/firestore';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useDarkMode } from '../../DarkModeContext';
 import { useColors } from '@/app/ColorConfig';
+import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler';
 
 interface CardData {
   id: string;
@@ -117,7 +118,55 @@ const DisplayCardsScreen: React.FC = () => {
     setFilteredCards(filtered);
   }, [searchQuery, cards, filterBy]);
 
+  const deleteCard = async (cardId: string) => {
+    const user = auth.currentUser;
+    if(!user){
+      console.error("No user logged in");
+      return;
+    }
+  
+
+  try{
+    const userWalletRef = doc(db, 'wallets', user.uid);
+    const cardRef = doc(collection(userWalletRef, 'cards'), cardId);
+    await deleteDoc(cardRef);
+
+      setCards(prevCards => prevCards.filter(card => card.id !== cardId));
+      setFilteredCards(prevCards => prevCards.filter(card => card.id !== cardId))
+
+    Alert.alert("Success", "Card deleted successfully");
+  } catch (error){
+    console.error("Error deleting card", error);
+    Alert.alert("Error", "Failed to delete card");
+  }
+  };
+
+  const confirmDelete = (cardId: string) => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this card?",
+      [
+        {text: "Cancel", style: "cancel"},
+        {text: "Delete", style: "destructive", onPress: () => deleteCard(cardId)}
+      ]
+    );
+  };
+
+  const renderRightActions = (cardId: string) => {
+    return (
+      <TouchableOpacity
+      style = {styles.deleteButton}
+      onPress={() => confirmDelete(cardId)}>
+        <View style={styles.deleteButtonContent}>
+          <Ionicons name="trash" size={24} color = "#FFF"/>
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </View>
+        </TouchableOpacity>
+      );
+    };
+
   const renderCard = ({ item }: { item: CardData }) => (
+    <Swipeable renderRightActions={() => renderRightActions(item.id)}>
     <TouchableOpacity onPress = {() => toggleCardExpansion(item.id)}>
     <LinearGradient
       colors={colors}
@@ -157,6 +206,7 @@ const DisplayCardsScreen: React.FC = () => {
     )}
     </LinearGradient>
     </TouchableOpacity>
+    </Swipeable>
   );
 
   const [expandedCardID, setExpandedCardID] = useState<string | null>(null);
@@ -166,6 +216,7 @@ const DisplayCardsScreen: React.FC = () => {
   };
 
   return (
+    <GestureHandlerRootView style={{flex: 1}}>
     <View style={[styles.container]}>
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: isDarkMode ? '#fff' : '#000' }]}>Wallet</Text>
@@ -245,6 +296,7 @@ const DisplayCardsScreen: React.FC = () => {
         </Text>
       )}
     </View>
+    </GestureHandlerRootView>
   );
 };
 
@@ -351,6 +403,25 @@ const styles = StyleSheet.create({
     borderTopColor: '#ccc',
     paddingTop: 10,
   },
+  deleteButton:{
+    backgroundColor: '#D72E2E',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '87%',
+    borderRadius: 8,
+  },
+  deleteButtonContent:{
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  deleteButtonText:{
+    color: "#FFF",
+    fontWeight: 'bold',
+    marginLeft : 10,
+  }
 });
 
 export default DisplayCardsScreen;
