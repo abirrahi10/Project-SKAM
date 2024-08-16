@@ -179,7 +179,7 @@ navigation.setOptions({
           style={styles.card}
         >
         <Text style={[styles.cardText]}>Name: {item.firstName} {item.lastName}</Text>
-        <Text style={[styles.cardText]}>Phone: {item.type === 'work' && item.workNumber ? formatPhoneNumber(item.workNumber) : formatPhoneNumber(item.phone)}</Text>
+        <Text style={[styles.cardText]}>Phone: {item.workNumber ? formatPhoneNumber(item.workNumber) : formatPhoneNumber(item.phone)}</Text>
         <Text style={[styles.cardText]}>Type: {item.type}</Text>
       </LinearGradient>
     </TouchableOpacity>
