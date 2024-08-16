@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, useColorScheme, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { db, auth } from '../../../firebaseConfig';
-import { collection, onSnapshot, doc, query, orderBy, deleteDoc, where, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot, doc, query, orderBy, deleteDoc, where, getDocs, getDoc } from 'firebase/firestore';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useDarkMode } from '../../DarkModeContext';
 import { useColors } from '@/app/ColorConfig';
 import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler';
+import { useFocusEffect } from 'expo-router';
 
 interface CardData {
   id: string;
@@ -34,6 +35,7 @@ interface CardData {
   birthday?: string;
   additionalUrls?: string[];
   type: 'student' | 'work' | 'personal';
+  originalCardId?: string;
 }
 
 type SortOption = 'firstName' | 'lastName';
@@ -43,6 +45,7 @@ const DisplayCardsScreen: React.FC = () => {
   const [cards, setCards] = useState<CardData[]>([]);
   const [filteredCards, setFilteredCards] = useState<CardData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('firstName');
   const [filterBy, setFilterBy] = useState<FilterOption>('A');
@@ -60,49 +63,86 @@ const DisplayCardsScreen: React.FC = () => {
     navigation.navigate('addCardWallet');
   };
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setIsAuthenticated(!!user);
-      if(user){
-        fetchCards();
-      } else {
-        setCards([]);
-        setFilteredCards([]);
-        setLoading(false);
-      }
-    });
-    return () => unsubscribe();
+  const formatPhoneNumber = (phone: string) =>{
+    const cleaned = (''+ phone). replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
 
-  }, []);
-
-  const fetchCards = useCallback(() => {
-    const user = auth.currentUser;
-    if (!user) {
-      console.error("No user logged in");
-      setLoading(false);
-      return;
+    if (match){
+    return '(' + match[1] + ')-' + match[2] + '-' + match[3];
     }
+    return phone;
+  };
+
+  const fetchCards = async() => {
+    const user = auth.currentUser;
+      if (!user) {
+        console.error("No user logged in");
+        setLoading(false);
+        return;
+      }
 
     const userWalletRef = doc(db, 'wallets', user.uid);
     const cardsRef = collection(userWalletRef, 'cards');
     const q = query(cardsRef, orderBy(sortBy));
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const cardsData: CardData[] = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      } as CardData));
-      console.log("Fetched cards:", cardsData);
-      setCards(cardsData);
-      
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching cards: ", error);
-      setLoading(false);
+    const unsubscribe = onSnapshot(q, async(querySnapshot) => {
+      console.log("Triggered");
+      const cardsData: CardData[] = [];
+      const cardPromises = querySnapshot.docs.map(async(docSnapshot) => {
+        const cardData = docSnapshot.data() as CardData;
+        const originalCardId = cardData.originalCardId;
+        if (originalCardId){
+          const originalCardRef = doc(db, 'cards', originalCardId);
+          const originalCardSnap = await getDoc(originalCardRef);
+        if(originalCardSnap.exists()){
+        const originalCardData = originalCardSnap.data() as CardData;
+        console.log('Original card Data:', originalCardData);
+        cardsData.push({
+        ...originalCardData,
+        id: docSnapshot.id,
+        originalCardId:originalCardId,
+      });
+    } else{
+      console.log('original card not found:', originalCardId);
+    }
+  } else{
+    cardsData.push({
+      ...cardData,
+      id: docSnapshot.id,
     });
+  }
+});
 
-    return unsubscribe;
-  }, [sortBy]);
+  await Promise.all(cardPromises);
+  console.log('Fetched Cards data:', cardsData);
+  setCards(cardsData);
+  setLoading(false);
+
+}, (error) => {
+  console.error("Error fetching cards: ", error);
+  setLoading(false);
+});
+ 
+    return() => unsubscribe();
+  };
+
+  const onRefresh = async () =>{
+    console.log("refreshed");
+    setRefreshing(true);
+    await fetchCards();
+    setRefreshing(false);
+  };
+  
+  useFocusEffect(
+    useCallback(() => {
+    fetchCards();
+    }, [sortBy])
+  );
+
+  useEffect(() =>{
+    console.log("updated cards state:", cards);
+    setFilteredCards(cards);
+  }, [cards]);
 
   useEffect(() => {
     let filtered = cards.filter(card => 
@@ -117,6 +157,10 @@ const DisplayCardsScreen: React.FC = () => {
 
     setFilteredCards(filtered);
   }, [searchQuery, cards, filterBy]);
+
+  useEffect(() => {
+    console.log("Filtereed cards:", filteredCards);
+  }, [filteredCards]);
 
   const deleteCard = async (cardId: string) => {
     const user = auth.currentUser;
@@ -289,10 +333,12 @@ const DisplayCardsScreen: React.FC = () => {
           data={filteredCards}
           renderItem={renderCard}
           keyExtractor={(item) => item.id}
+          refreshing={refreshing}
+          onRefresh = {onRefresh}
         />
       ) : (
         <Text style={[styles.noCardText, isDarkMode && styles.darkText]}>
-        No cards found.
+        No cards found
         </Text>
       )}
     </View>

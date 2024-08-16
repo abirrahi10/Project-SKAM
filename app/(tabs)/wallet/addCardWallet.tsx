@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors} from '../../ColorConfig';
 import {LinearGradient} from 'expo-linear-gradient';
 import  MaskInput, {createNumberMask} from 'react-native-mask-input';
-
+import { useDarkMode } from '@/app/DarkModeContext';
 
 interface CardData {
   //id: string;
@@ -28,7 +28,7 @@ const AddCardScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
+  const {isDarkMode} = useDarkMode();
   const navigation = useNavigation();
   const { colors } = useColors();
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -135,7 +135,7 @@ navigation.setOptions({
       const newCardRef = doc(cardsRef);
       await setDoc(newCardRef, {
         ...originalCardData,
-        originalCardId: cardDocId 
+        originalCardId: cardDocId,
       });
       
       Alert.alert('Success', 'Card added to your wallet', [
@@ -149,6 +149,15 @@ navigation.setOptions({
     }
   };
 
+  const formatPhoneNumber = (phone: string) =>{
+    const cleaned = (''+ phone). replace(/\D/g, '');
+    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+
+    if (match){
+    return '(' + match[1] + ')-' + match[2] + '-' + match[3];
+    }
+    return phone;
+  };
 
   const renderCard = ({ item }: {item: CardData & {docId: string}}) => (
     <TouchableOpacity
@@ -170,7 +179,7 @@ navigation.setOptions({
           style={styles.card}
         >
         <Text style={[styles.cardText]}>Name: {item.firstName} {item.lastName}</Text>
-        <Text style={[styles.cardText]}>Phone: {item.type === 'work' && item.workNumber ? item.workNumber : item.phone}</Text>
+        <Text style={[styles.cardText]}>Phone: {item.type === 'work' && item.workNumber ? formatPhoneNumber(item.workNumber) : formatPhoneNumber(item.phone)}</Text>
         <Text style={[styles.cardText]}>Type: {item.type}</Text>
       </LinearGradient>
     </TouchableOpacity>
@@ -179,9 +188,14 @@ navigation.setOptions({
   return (
     <View style={styles.container}>
       <MaskInput
-        style={[styles.searchInput, { color: isDarkMode ? '#fff' : '#000' }]}
-        mask = {['(', /\d/,/\d/, /\d/, ')',' ', /\d/, /\d/, /\d/, '-', /\d/, /\d/,/\d/, /\d/]}
-        placeholder = {phoneNumber ? "(   ) -   -    " : "Enter phone number"}
+        style={[styles.searchInput, 
+          { color: isDarkMode ? '#fff' : '#000',
+            backgroundColor: isDarkMode ? '#333' : '#fff',
+          }
+
+        ]}
+        mask = {[/\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, '-', /\d/, /\d/,/\d/, /\d/]}
+        placeholder = {"Enter phone number"}
         onChangeText= {handlePhoneNumber}
         placeholderTextColor="gray"
         value={phoneNumber}
