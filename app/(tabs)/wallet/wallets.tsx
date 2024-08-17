@@ -1,7 +1,7 @@
 //Wallets.tsx
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, useColorScheme, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, useColorScheme, TextInput, TouchableOpacity, FlatList, Alert, Animated, Easing, Linking, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { db, auth } from '../../../firebaseConfig';
 import { collection, onSnapshot, doc, query, orderBy, deleteDoc, where, getDocs, getDoc } from 'firebase/firestore';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +11,8 @@ import { useDarkMode } from '../../DarkModeContext';
 import { useColors } from '@/app/ColorConfig';
 import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler';
 import { useFocusEffect } from 'expo-router';
+import Icon from 'react-native-vector-icons/FontAwesome'
+import { SocialIcon } from 'react-native-elements';
 
 interface CardData {
   id: string;
@@ -34,7 +36,7 @@ interface CardData {
   snapchat?: string;
   birthday?: string;
   additionalUrls?: string[];
-  type: 'student' | 'work' | 'personal';
+  type: 'Student' | 'Work' | 'Personal';
   originalCardId?: string;
 }
 
@@ -49,14 +51,13 @@ const DisplayCardsScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('firstName');
   const [filterBy, setFilterBy] = useState<FilterOption>('A');
-  
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [selectedCard, setSelectedCard] = useState <CardData | null> (null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const colorScheme = useColorScheme();
   const navigation = useNavigation();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const { colors } = useColors();
-
-
 
   const handleAddCardPress = () =>{
     // @ts-ignore
@@ -73,6 +74,11 @@ const DisplayCardsScreen: React.FC = () => {
     return phone;
   };
 
+  const handleCardLongPress = (card: CardData) => {
+    setSelectedCard(card);
+    setDetailsModalVisible(true);
+  }
+
   const fetchCards = async() => {
     const user = auth.currentUser;
       if (!user) {
@@ -86,7 +92,7 @@ const DisplayCardsScreen: React.FC = () => {
     const q = query(cardsRef, orderBy(sortBy));
 
     const unsubscribe = onSnapshot(q, async(querySnapshot) => {
-      console.log("Triggered");
+      //console.log("Triggered");
       const cardsData: CardData[] = [];
       const cardPromises = querySnapshot.docs.map(async(docSnapshot) => {
         const cardData = docSnapshot.data() as CardData;
@@ -96,14 +102,14 @@ const DisplayCardsScreen: React.FC = () => {
           const originalCardSnap = await getDoc(originalCardRef);
         if(originalCardSnap.exists()){
         const originalCardData = originalCardSnap.data() as CardData;
-        console.log('Original card Data:', originalCardData);
+        //console.log('Original card Data:', originalCardData);
         cardsData.push({
         ...originalCardData,
         id: docSnapshot.id,
         originalCardId:originalCardId,
       });
     } else{
-      console.log('original card not found:', originalCardId);
+      //console.log('original card not found:', originalCardId);
     }
   } else{
     cardsData.push({
@@ -114,7 +120,7 @@ const DisplayCardsScreen: React.FC = () => {
 });
 
   await Promise.all(cardPromises);
-  console.log('Fetched Cards data:', cardsData);
+  //console.log('Fetched Cards data:', cardsData);
   setCards(cardsData);
   setLoading(false);
 
@@ -127,7 +133,7 @@ const DisplayCardsScreen: React.FC = () => {
   };
 
   const onRefresh = async () =>{
-    console.log("refreshed");
+    //console.log("refreshed");
     setRefreshing(true);
     await fetchCards();
     setRefreshing(false);
@@ -140,7 +146,7 @@ const DisplayCardsScreen: React.FC = () => {
   );
 
   useEffect(() =>{
-    console.log("updated cards state:", cards);
+    //console.log("updated cards state:", cards);
     setFilteredCards(cards);
   }, [cards]);
 
@@ -159,7 +165,7 @@ const DisplayCardsScreen: React.FC = () => {
   }, [searchQuery, cards, filterBy]);
 
   useEffect(() => {
-    console.log("Filtereed cards:", filteredCards);
+    //("Filtered cards:", filteredCards);
   }, [filteredCards]);
 
   const deleteCard = async (cardId: string) => {
@@ -183,6 +189,90 @@ const DisplayCardsScreen: React.FC = () => {
     console.error("Error deleting card", error);
     Alert.alert("Error", "Failed to delete card");
   }
+  };
+
+  const renderCardDetails = (item: CardData) => {
+    switch(item.type){
+      case 'Personal':
+        return (
+          <>
+           <View style = {styles.CardDetailsContainer}>
+           <View style = {styles.cardHeader}>
+          <Text style= {[styles.cardName, isDarkMode && styles.darkText]}> {`${item.firstName} ${item.lastName}`}</Text>
+          <Text style={[styles.cardType, isDarkMode && styles.darkText]}>{item.type}</Text>
+          </View>
+          <View style = {styles.detailsContainer}>
+          {item.phone && <Text style={[styles.cardPhone, isDarkMode && styles.darkText]}>{formatPhoneNumber(item.phone)}</Text>}
+          {item.personalEmail && <Text style={[styles.cardEmail, isDarkMode && styles.darkText]}>{item.personalEmail}</Text>}
+          {item.location && <Text style={[styles.cardLocation, isDarkMode && styles.darkText]}>{item.location}</Text>}
+          </View>
+          </View>
+          </>
+        );
+        case 'Student':
+          return (
+            <>
+          <View style = {styles.CardDetailsContainer}>
+           <View style = {styles.cardHeader}>
+          <Text style= {[styles.cardName, isDarkMode && styles.darkText]}> {`${item.firstName} ${item.lastName}`}</Text>
+          <Text style={[styles.cardType, isDarkMode && styles.darkText]}>{item.type}</Text>
+          </View>
+          <View style = {styles.detailsContainer}>
+            {item.phone && <Text style={[styles.cardPhone, isDarkMode && styles.darkText]}>{formatPhoneNumber(item.phone)}</Text>}
+            {item.schoolEmail && <Text style={[styles.cardEmail, isDarkMode && styles.darkText]}>{item.schoolEmail}</Text>}
+            {item.school && <Text style={[styles.cardSchool, isDarkMode && styles.darkText]}>{item.school}</Text>}
+            {item.major && <Text style={[styles.cardMajor, isDarkMode && styles.darkText]}>{item.major}</Text>}
+            </View>
+            </View>
+            </>
+          );
+          case 'Work':
+            return (
+              <>
+          <View style = {styles.CardDetailsContainer}>
+           <View style = {styles.cardHeader}>
+          <Text style= {[styles.cardName, isDarkMode && styles.darkText]}> {`${item.firstName} ${item.lastName}`}</Text>
+          <Text style={[styles.cardType, isDarkMode && styles.darkText]}>{item.type}</Text>
+          </View>
+          <View style = {styles.detailsContainer}>
+              {item.workNumber && <Text style={[styles.cardPhone, isDarkMode && styles.darkText]}>{formatPhoneNumber(item.workNumber)}</Text>}
+              {item.workEmail && <Text style={[styles.cardEmail, isDarkMode && styles.darkText]}>{item.workEmail}</Text>}
+              {item.school && <Text style={[styles.cardSchool, isDarkMode && styles.darkText]}>{item.school}</Text>}
+              {item.location && <Text style={[styles.cardLocation, isDarkMode && styles.darkText]}>{item.location}</Text>}
+              </View>
+              </View>
+              </>
+            );
+            default:
+              return null;
+    }
+  };
+
+
+  const renderSocialIcons = (item: CardData) => {
+    switch (item.type){
+      case 'Personal':
+        return(
+          <>
+          <View style = {styles.SocialIconContainer}>
+          {item.instagram && <Icon name= "instagram" size ={24} color = "#C13584" onPress={() => Linking.openURL(`https://www.instagram.com/${item.instagram}`)}/>}
+          {item.twitter && <Icon name= "twitter" size ={24} color = "#1DA1F2" onPress={() => Linking.openURL(`https://www.tiwtter.com/${item.twitter}`)}/>}
+          {item.facebook && <Icon name= "facebook" size ={24} color = "#3b5998" onPress={() => Linking.openURL(`https://www.facebook.com/${item.facebook}`)}/>}
+          {item.tiktok && <Icon name= "tiktok" size ={24} color = "#000000" onPress={() => Linking.openURL(`https://www.tiktok.com/${item.tiktok}`)}/>}
+          {item.snapchat && <Icon name= "snapchat" size ={24} color = "#FFFC00" onPress={() => Linking.openURL(`https://www.snapchat.com/${item.snapchat}`)}/>}
+          </View>
+          </>
+        );
+        case 'Student':
+        case 'Work':
+          return(
+          <View style = {styles.SocialIconContainer}>
+          {item.linkedin && <Icon name= "linkedin" size ={24} color = "#0077B5" onPress={() => Linking.openURL(`https://www.linkedin.com/in/${item.linkedin}`)} />}
+          </View>
+          );
+        default:
+          return null;
+    }
   };
 
   const confirmDelete = (cardId: string) => {
@@ -211,54 +301,20 @@ const DisplayCardsScreen: React.FC = () => {
 
   const renderCard = ({ item }: { item: CardData }) => (
     <Swipeable renderRightActions={() => renderRightActions(item.id)}>
-    <TouchableOpacity onPress = {() => toggleCardExpansion(item.id)}>
+    <TouchableOpacity onLongPress={() => handleCardLongPress(item)}>
     <LinearGradient
       colors={colors}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.card}
     >
-      <Text style={[styles.cardText, isDarkMode && styles.darkText]}>First Name: {item.firstName}</Text>
-      <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Last Name: {item.lastName}</Text>
-      <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Type: {item.type}</Text>
-    
 
-    {expandedCardID === item.id && (
-      <View style={styles.expandedCardDetails}>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Work Number: {item.workNumber}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Work Email: {item.workEmail}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>School Email: {item.schoolEmail}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Personal Email: {item.personalEmail}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Location: {item.location}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Linkedin: {item.linkedin}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>School: {item.school}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Major: {item.major}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Discord: {item.discord}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Instagram: {item.instagram}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Twitter: {item.twitter}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Facebook: {item.facebook}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Tiktok: {item.tiktok}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Snapchat: {item.snapchat}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Birthday: {item.birthday}</Text>
-        <Text style={[styles.cardText, isDarkMode && styles.darkText]}>Additional Information: {item.additionalInfo}</Text>
-        {item.additionalUrls && (
-          <Text style={[styles.cardText, isDarkMode&& styles.darkText]}>
-            Additional URLs: {item.additionalUrls.join(',')}
-          </Text>
-        )}
-      </View>
-    )}
+      {renderCardDetails(item)}
+      {renderSocialIcons(item)}
     </LinearGradient>
     </TouchableOpacity>
     </Swipeable>
   );
-
-  const [expandedCardID, setExpandedCardID] = useState<string | null>(null);
-
-  const toggleCardExpansion = (cardId: string) => {
-    setExpandedCardID (prevID => prevID === cardId ? null: cardId);
-  };
-
   return (
     <GestureHandlerRootView style={{flex: 1}}>
     <View style={[styles.container]}>
@@ -327,7 +383,7 @@ const DisplayCardsScreen: React.FC = () => {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color={isDarkMode ? "#ffffff" : "#0000ff"} />
+        <ActivityIndicator size="large" color= {"#0000ff"} />
       ) : filteredCards.length > 0 ? (
         <FlatList
           data={filteredCards}
@@ -342,6 +398,110 @@ const DisplayCardsScreen: React.FC = () => {
         </Text>
       )}
     </View>
+
+      <Modal
+        animationType='slide'
+        transparent = {false}
+        visible = {detailsModalVisible}
+        onRequestClose={() => setDetailsModalVisible(false)}>
+      <View style={[styles.modalContainer, {backgroundColor: isDarkMode ? '#000' : '#fff'}]}>
+        <Text style = {[styles.modalTitle, {color: isDarkMode ? '#fff' : "#000"}]} > Card Details </Text>
+        <ScrollView>
+          {selectedCard && (
+            <View>
+              <Text style={[styles.detailText, {color: isDarkMode ? '#fff' : '#000'}]}>
+                <Text style = {styles.boldLabel}>Card Type: </Text>{selectedCard.type}
+              </Text>
+              <Text style={[styles.detailText, {color: isDarkMode ? '#fff' : '#000'}]}>
+                <Text style = {styles.boldLabel}>Name: </Text>{selectedCard.firstName} {selectedCard.firstName}
+              </Text>
+
+              {selectedCard.type === 'Personal' && (
+                <>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Phone: </Text> {selectedCard.phone}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Personal Email: </Text> {selectedCard.personalEmail}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Location: </Text> {selectedCard.location}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Instagram: </Text> {selectedCard.instagram}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Twitter: </Text> {selectedCard.twitter}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Facebook: </Text> {selectedCard.facebook}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Tiktok: </Text> {selectedCard.tiktok}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>SnapChat: </Text> {selectedCard.snapchat}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Birthday: </Text> {selectedCard.birthday}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Additional Info: </Text> {selectedCard.additionalInfo}
+                </Text>
+                </>
+              )}
+              {selectedCard.type === 'Work' && (
+                <>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Work Number: </Text> {selectedCard.workNumber}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Work Email: </Text> {selectedCard.workEmail}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Location: </Text> {selectedCard.location}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>LinkedIn: </Text> {selectedCard.linkedin}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Additional URLs: </Text> {selectedCard.additionalUrls}
+                </Text>
+                </>
+              )}
+                    {selectedCard.type === 'Student' && (
+                <>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Phone: </Text> {selectedCard.phone}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>School Email: </Text> {selectedCard.schoolEmail}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>School Location: </Text> {selectedCard.location}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>LinkedIn: </Text> {selectedCard.linkedin}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>School / University: </Text> {selectedCard.school}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Major: </Text> {selectedCard.major}
+                </Text>
+                <Text style={[styles.detailText, {color : isDarkMode ? '#fff' : '#000'}]}>
+                  <Text style={styles.boldLabel}>Additional Info: </Text> {selectedCard.additionalInfo}
+                </Text>
+                </>
+              )}
+            </View>
+          )}
+          <TouchableOpacity style={styles.closeButton} onPress ={() => setDetailsModalVisible(false)}>
+            <Text style={styles.closeButtonText}>Close</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+      </Modal>
     </GestureHandlerRootView>
   );
 };
@@ -352,8 +512,7 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 50,
   },
-
-  header: {
+  header:{
     marginBottom: 20,
   },
   headerTitle: {
@@ -401,28 +560,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
+    alignItems: 'center',
   },
   sortContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 10,
+    flex: 1,
   },
   filterContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    justifyContent: 'flex-end',
   },
   optionLabel: {
     fontWeight: 'bold',
     marginRight: 5,
+    fontSize: 11.5,
     color: '#000000',
   },
   optionValue: {
     color: '#007bff',
+    fontSize: 12,
   },
   darkOptionValue: {
     color: '#007bff',
+    fontSize: 12,
   },
   selectedOption: {
     fontWeight: 'bold',
+    fontSize: 11,
   },
   optionSeparator: {
     marginHorizontal: 5,
@@ -430,8 +598,42 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 20,
-    padding: 15,
+    padding: 20,
     borderRadius: 10,
+    height: 200,
+    width: '100%',
+  },
+  cardName:{
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginLeft: -3,
+  },
+  cardType:{
+    marginTop: -30,
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'right',
+  },
+  cardPhone:{
+    marginTop: 5,
+    fontSize: 15,
+  },
+  cardEmail:{
+    marginTop: 5,
+    fontSize: 15,
+  },
+  cardLocation:{
+    marginTop: 5,
+    fontSize: 15,
+  },
+  cardSchool:{
+    marginTop: 5,
+    fontSize: 15,
+  },
+  cardMajor:{
+    marginTop: 5,
+    fontSize: 15,
   },
   cardText: {
     fontSize: 15,
@@ -443,18 +645,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
   },
-  expandedCardDetails:{
+  CardDetailsContainer:{
+    flex: 1,
+  },
+  detailsContainer:{
+    marginTop: 15,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  SocialIconContainer:{
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     marginTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#ccc',
-    paddingTop: 10,
   },
   deleteButton:{
     backgroundColor: '#D72E2E',
     justifyContent: 'center',
     alignItems: 'center',
     width: 80,
-    height: '87%',
+    height: '91%',
     borderRadius: 8,
   },
   deleteButtonContent:{
@@ -467,7 +679,38 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontWeight: 'bold',
     marginLeft : 10,
-  }
+  },
+  modalContainer:{
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalTitle:{
+    fontSize: 24,
+    textAlign: 'center',
+    marginBottom: 20,
+    marginTop: 50,
+  },
+  detailText:{
+    fontSize: 16,
+    marginBottom: 14,
+  },
+  boldLabel:{
+    fontFamily: 'Sans-Serif',
+    fontWeight: 'bold',
+    fontSize: 17,
+  },
+  closeButton:{
+    backgroundColor: '#D72E2E',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  closeButtonText:{
+    color: '#fff',
+    fontWeight: 'bold',
+  },
 });
 
 export default DisplayCardsScreen;

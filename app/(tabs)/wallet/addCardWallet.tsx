@@ -11,13 +11,15 @@ import { useColors} from '../../ColorConfig';
 import {LinearGradient} from 'expo-linear-gradient';
 import  MaskInput, {createNumberMask} from 'react-native-mask-input';
 import { useDarkMode } from '@/app/DarkModeContext';
+import Icon from 'react-native-vector-icons/FontAwesome'
+import { SocialIcon } from 'react-native-elements';
 
 interface CardData {
   //id: string;
   firstName: string;
   lastName: string;
   born: number;
-  type: 'student' | 'work' | 'personal';
+  type: 'Student' | 'Work' | 'Personal';
   phone: string;
   workNumber?: string;
 }
@@ -159,6 +161,54 @@ navigation.setOptions({
     return phone;
   };
 
+  const renderCardDetails = (item: CardData) => {
+    switch(item.type){
+      case 'Personal':
+        return (
+          <>
+           <View style = {styles.CardDetailsContainer}>
+           <View style = {styles.cardHeader}>
+          <Text style= {[styles.cardName, isDarkMode && styles.darkText]}> {`${item.firstName} ${item.lastName}`}</Text>
+          <Text style={[styles.cardType, isDarkMode && styles.darkText]}>{item.type}</Text>
+          </View>
+          <View style = {styles.detailsContainer}>
+          {item.phone && <Text style={[styles.cardPhone, isDarkMode && styles.darkText]}>{formatPhoneNumber(item.phone)}</Text>}
+          </View>
+          </View>
+          </>
+        );
+        case 'Student':
+          return (
+            <>
+          <View style = {styles.CardDetailsContainer}>
+           <View style = {styles.cardHeader}>
+          <Text style= {[styles.cardName, isDarkMode && styles.darkText]}> {`${item.firstName} ${item.lastName}`}</Text>
+          <Text style={[styles.cardType, isDarkMode && styles.darkText]}>{item.type}</Text>
+          </View>
+          <View style = {styles.detailsContainer}>
+            {item.phone && <Text style={[styles.cardPhone, isDarkMode && styles.darkText]}>{formatPhoneNumber(item.phone)}</Text>}
+            </View>
+            </View>
+            </>
+          );
+          case 'Work':
+            return (
+              <>
+          <View style = {styles.CardDetailsContainer}>
+           <View style = {styles.cardHeader}>
+          <Text style= {[styles.cardName, isDarkMode && styles.darkText]}> {`${item.firstName} ${item.lastName}`}</Text>
+          <Text style={[styles.cardType, isDarkMode && styles.darkText]}>{item.type}</Text>
+          </View>
+          <View style = {styles.detailsContainer}>
+              {item.workNumber && <Text style={[styles.cardPhone, isDarkMode && styles.darkText]}>{formatPhoneNumber(item.workNumber)}</Text>}
+              </View>
+              </View>
+              </>
+            );
+            default:
+              return null;
+    }
+  };
   const renderCard = ({ item }: {item: CardData & {docId: string}}) => (
     <TouchableOpacity
       onPress={() => {
@@ -178,9 +228,7 @@ navigation.setOptions({
           end={{ x: 1, y: 0.5 }}
           style={styles.card}
         >
-        <Text style={[styles.cardText]}>Name: {item.firstName} {item.lastName}</Text>
-        <Text style={[styles.cardText]}>Phone: {item.workNumber ? formatPhoneNumber(item.workNumber) : formatPhoneNumber(item.phone)}</Text>
-        <Text style={[styles.cardText]}>Type: {item.type}</Text>
+        {renderCardDetails(item)}
       </LinearGradient>
     </TouchableOpacity>
   );
@@ -237,6 +285,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  darkText: {
+    color: '#ffffff',
+  },
   searchInput: {
     height: 40,
     borderColor: 'gray',
@@ -253,10 +304,48 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   card: {
-    backgroundColor: '#f0f0f0',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
+    marginBottom: 20,
+    padding: 20,
+    borderRadius: 10,
+    height: 200,
+    width: '100%',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cardName:{
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginLeft: -3,
+  },
+  cardType:{
+    marginTop: -30,
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'right',
+  },
+  cardPhone:{
+    marginTop: 5,
+    fontSize: 15,
+  },
+  cardEmail:{
+    marginTop: 5,
+    fontSize: 15,
+  },
+  cardLocation:{
+    marginTop: 5,
+    fontSize: 15,
+  },
+  cardSchool:{
+    marginTop: 5,
+    fontSize: 15,
+  },
+  cardMajor:{
+    marginTop: 5,
+    fontSize: 15,
   },
   emptyText: {
     textAlign: 'center',
@@ -267,7 +356,13 @@ const styles = StyleSheet.create({
   cardText: {
     fontSize: 15,
     marginTop: 5,
-  }
+  },
+  CardDetailsContainer:{
+    flex: 1,
+  },
+  detailsContainer:{
+    marginTop: 15,
+  },
 });
 
 export default AddCardScreen;
