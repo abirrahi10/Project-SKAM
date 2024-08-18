@@ -256,7 +256,7 @@ const DisplayCardsScreen: React.FC = () => {
           <>
           <View style = {styles.SocialIconContainer}>
           {item.instagram && <Icon name= "instagram" size ={24} color = "#C13584" onPress={() => Linking.openURL(`https://www.instagram.com/${item.instagram}`)}/>}
-          {item.twitter && <Icon name= "twitter" size ={24} color = "#1DA1F2" onPress={() => Linking.openURL(`https://www.tiwtter.com/${item.twitter}`)}/>}
+          {item.twitter && <Icon name= "twitter" size ={24} color = "#1DA1F2" onPress={() => Linking.openURL(`https://www.twitter.com/${item.twitter}`)}/>}
           {item.facebook && <Icon name= "facebook" size ={24} color = "#3b5998" onPress={() => Linking.openURL(`https://www.facebook.com/${item.facebook}`)}/>}
           {item.tiktok && <Icon name= "tiktok" size ={24} color = "#000000" onPress={() => Linking.openURL(`https://www.tiktok.com/${item.tiktok}`)}/>}
           {item.snapchat && <Icon name= "snapchat" size ={24} color = "#FFFC00" onPress={() => Linking.openURL(`https://www.snapchat.com/${item.snapchat}`)}/>}
