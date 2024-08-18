@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
   optionLabel: {
     fontWeight: 'bold',
     marginRight: 5,
-    fontSize: 11.5,
+    fontSize: 14,
     color: '#000000',
   },
   optionValue: {
@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   optionSeparator: {
-    marginHorizontal: 5,
+    marginHorizontal: 3.5,
     color: '#000000',
   },
   card: {
